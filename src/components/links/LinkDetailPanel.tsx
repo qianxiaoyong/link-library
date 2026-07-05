@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
 import type { ResourceLink } from "@/shared/types/resource-link";
 import { LinkStatusBadge } from "./LinkStatusBadge";
+import type { PageToastVariant } from "./use-page-toast";
 import {
   copyToClipboard,
   displayValue,
@@ -17,6 +17,7 @@ type LinkDetailPanelProps = {
   onDelete: (item: ResourceLink) => void;
   onToggleFavorite: (item: ResourceLink) => void;
   onToggleStatus: (item: ResourceLink) => void;
+  onShowToast: (message: string, variant?: PageToastVariant) => void;
 };
 
 function DetailRow({
@@ -40,9 +41,8 @@ export function LinkDetailPanel({
   onDelete,
   onToggleFavorite,
   onToggleStatus,
+  onShowToast,
 }: LinkDetailPanelProps) {
-  const [copyMessage, setCopyMessage] = useState("");
-
   if (!item) {
     return (
       <aside className="flex h-full items-center justify-center rounded-lg border border-dashed border-zinc-300 bg-white p-4 text-sm text-zinc-500">
@@ -51,11 +51,18 @@ export function LinkDetailPanel({
     );
   }
 
-  async function handleCopy(label: string, text: string | null) {
-    if (!text) return;
-    await copyToClipboard(text);
-    setCopyMessage(`已复制${label}`);
-    window.setTimeout(() => setCopyMessage(""), 1500);
+  async function handleCopyInfo(current: ResourceLink) {
+    if (!current.sourceText?.trim()) {
+      onShowToast("当前资料没有原始输入内容。", "warning");
+      return;
+    }
+
+    try {
+      await copyToClipboard(current.sourceText);
+      onShowToast("已复制原始输入内容。", "success");
+    } catch {
+      onShowToast("复制失败，请稍后重试。", "error");
+    }
   }
 
   return (
@@ -73,27 +80,13 @@ export function LinkDetailPanel({
           ) : null}
         </div>
 
-        {copyMessage ? (
-          <div className="mt-2 rounded-md bg-emerald-50 px-3 py-1.5 text-xs text-emerald-700">
-            {copyMessage}
-          </div>
-        ) : null}
-
         <div className="mt-3 flex flex-wrap gap-1.5">
           <button
             type="button"
             className="rounded border border-zinc-300 px-2 py-1 text-xs hover:bg-zinc-50"
-            onClick={() => handleCopy("链接", item.url)}
+            onClick={() => void handleCopyInfo(item)}
           >
-            复制链接
-          </button>
-          <button
-            type="button"
-            className="rounded border border-zinc-300 px-2 py-1 text-xs hover:bg-zinc-50"
-            onClick={() => handleCopy("提取码", item.accessCode)}
-            disabled={!item.accessCode}
-          >
-            复制提取码
+            复制信息
           </button>
           <button
             type="button"

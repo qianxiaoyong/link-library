@@ -29,6 +29,8 @@ import { LinkDetailPanel } from "./LinkDetailPanel";
 import { LinkFormDialog, type LinkFormMode } from "./LinkFormDialog";
 import { LinkImportDialog } from "./LinkImportDialog";
 import { LinkTable } from "./LinkTable";
+import { copyToClipboard } from "./link-ui-utils";
+import { getToastClassName, usePageToast } from "./use-page-toast";
 
 const PAGE_SIZE = 50;
 
@@ -70,6 +72,7 @@ function filtersToExportParams(
 }
 
 export function LinkLibraryPage() {
+  const { toast, showToast } = usePageToast();
   const [filters, setFilters] = useState<LinkFilterValues>(defaultLinkFilterValues);
   const [appliedFilters, setAppliedFilters] =
     useState<LinkFilterValues>(defaultLinkFilterValues);
@@ -77,7 +80,6 @@ export function LinkLibraryPage() {
   const [items, setItems] = useState<ResourceLink[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [errorMessage, setErrorMessage] = useState("");
   const [selectedItem, setSelectedItem] = useState<ResourceLink | null>(null);
   const [selectedRowIds, setSelectedRowIds] = useState<Set<string>>(new Set());
   const [formOpen, setFormOpen] = useState(false);
@@ -86,8 +88,6 @@ export function LinkLibraryPage() {
   const [formSaving, setFormSaving] = useState(false);
   const [formError, setFormError] = useState("");
   const [importOpen, setImportOpen] = useState(false);
-  const [importHint, setImportHint] = useState("");
-  const [backupMessage, setBackupMessage] = useState("");
   const [backingUp, setBackingUp] = useState(false);
   const [batchEditOpen, setBatchEditOpen] = useState(false);
   const [batchEditSaving, setBatchEditSaving] = useState(false);
@@ -96,7 +96,6 @@ export function LinkLibraryPage() {
   const [batchEditResult, setBatchEditResult] = useState<BatchEditResult | null>(
     null,
   );
-  const [batchEditMessage, setBatchEditMessage] = useState("");
 
   const totalPages = useMemo(
     () => Math.max(1, Math.ceil(total / PAGE_SIZE)),
@@ -114,7 +113,6 @@ export function LinkLibraryPage() {
       keepSelection = true,
     ) => {
       setLoading(true);
-      setErrorMessage("");
 
       try {
         const result = await listLinks(filtersToParams(nextFilters, nextOffset));
@@ -134,12 +132,12 @@ export function LinkLibraryPage() {
           return next;
         });
       } catch (error) {
-        setErrorMessage(getErrorMessage(error));
+        showToast(getErrorMessage(error), "error");
       } finally {
         setLoading(false);
       }
     },
-    [],
+    [showToast],
   );
 
   useEffect(() => {
@@ -147,7 +145,6 @@ export function LinkLibraryPage() {
 
     async function loadInitial() {
       setLoading(true);
-      setErrorMessage("");
 
       try {
         const result = await listLinks(filtersToParams(appliedFilters, offset));
@@ -157,7 +154,7 @@ export function LinkLibraryPage() {
         setSelectedRowIds(new Set());
       } catch (error) {
         if (!active) return;
-        setErrorMessage(getErrorMessage(error));
+        showToast(getErrorMessage(error), "error");
       } finally {
         if (active) setLoading(false);
       }
@@ -168,7 +165,7 @@ export function LinkLibraryPage() {
     return () => {
       active = false;
     };
-  }, [appliedFilters, offset]);
+  }, [appliedFilters, offset, showToast]);
 
   function applyFilters(nextFilters: LinkFilterValues, resetOffset = true) {
     if (resetOffset) setOffset(0);
@@ -233,6 +230,7 @@ export function LinkLibraryPage() {
         setFormOpen(false);
         await refreshList(appliedFilters, offset);
         setSelectedItem(created);
+        showToast("新增资料成功。", "success");
         return;
       }
 
@@ -245,6 +243,7 @@ export function LinkLibraryPage() {
       setFormOpen(false);
       await refreshList(appliedFilters, offset);
       setSelectedItem(updated);
+      showToast("编辑资料成功。", "success");
     } catch (error) {
       setFormError(getErrorMessage(error));
     } finally {
@@ -272,8 +271,9 @@ export function LinkLibraryPage() {
         return next;
       });
       await refreshList(appliedFilters, offset, false);
+      showToast("删除资料成功。", "success");
     } catch (error) {
-      setErrorMessage(getErrorMessage(error));
+      showToast(getErrorMessage(error), "error");
     }
   }
 
@@ -284,8 +284,9 @@ export function LinkLibraryPage() {
       });
       setSelectedItem(updated);
       await refreshList(appliedFilters, offset);
+      showToast(updated.favorite ? "已收藏。" : "已取消收藏。", "success");
     } catch (error) {
-      setErrorMessage(getErrorMessage(error));
+      showToast(getErrorMessage(error), "error");
     }
   }
 
@@ -302,8 +303,26 @@ export function LinkLibraryPage() {
       }
 
       await refreshList(appliedFilters, offset, false);
+      showToast(
+        updated.status === "invalid" ? "已标记为已失效。" : "已标记为正常。",
+        "success",
+      );
     } catch (error) {
-      setErrorMessage(getErrorMessage(error));
+      showToast(getErrorMessage(error), "error");
+    }
+  }
+
+  async function handleCopyInfo(item: ResourceLink) {
+    if (!item.sourceText?.trim()) {
+      showToast("当前资料没有原始输入内容。", "warning");
+      return;
+    }
+
+    try {
+      await copyToClipboard(item.sourceText);
+      showToast("已复制原始输入信息。", "success");
+    } catch {
+      showToast("复制失败，请手动复制。", "error");
     }
   }
 
@@ -318,29 +337,29 @@ export function LinkLibraryPage() {
     });
   }
 
-  function handleExportFiltered() {
-    downloadExportExcel({
-      scope: "filtered",
-      ...filtersToExportParams(appliedFilters),
-    });
-  }
-
-  function handleExportAll() {
-    downloadExportExcel({ scope: "all" });
+  function handleExportExcel() {
+    try {
+      downloadExportExcel({
+        scope: "filtered",
+        ...filtersToExportParams(appliedFilters),
+      });
+      showToast("已开始导出 Excel。", "success");
+    } catch (error) {
+      showToast(getErrorMessage(error), "error");
+    }
   }
 
   async function handleBackupDatabase() {
     setBackingUp(true);
-    setBackupMessage("");
-    setErrorMessage("");
 
     try {
       const result = await backupDatabase();
-      setBackupMessage(
-        `数据库备份成功：${result.fileName}\n备份路径：${result.backupPath}`,
+      showToast(
+        `数据库备份成功：${result.fileName}`,
+        "success",
       );
     } catch (error) {
-      setErrorMessage(getErrorMessage(error));
+      showToast(getErrorMessage(error), "error");
     } finally {
       setBackingUp(false);
     }
@@ -363,7 +382,6 @@ export function LinkLibraryPage() {
     if (ids.length === 0) return;
 
     setBatchEditSaving(true);
-    setBatchEditMessage("");
 
     const titleById = new Map(items.map((item) => [item.id, item.title]));
 
@@ -379,8 +397,9 @@ export function LinkLibraryPage() {
         failures: failuresWithTitle,
       };
 
-      setBatchEditMessage(
+      showToast(
         `批量编辑完成：成功 ${result.successCount} 条，失败 ${result.failureCount} 条。`,
+        result.failureCount > 0 ? "warning" : "success",
       );
       setSelectedRowIds(new Set());
       await refreshList(appliedFilters, offset, false);
@@ -391,7 +410,7 @@ export function LinkLibraryPage() {
         setBatchEditResult(fullResult);
       }
     } catch (error) {
-      setErrorMessage(getErrorMessage(error));
+      showToast(getErrorMessage(error), "error");
     } finally {
       setBatchEditSaving(false);
     }
@@ -412,17 +431,24 @@ export function LinkLibraryPage() {
           <div className="flex shrink-0 flex-nowrap items-center gap-1.5 overflow-x-auto">
             <button
               type="button"
-              onClick={handleExportFiltered}
-              className="whitespace-nowrap rounded border border-zinc-300 bg-white px-2.5 py-1.5 text-xs font-medium text-zinc-800 hover:bg-zinc-50"
+              onClick={() => setImportOpen(true)}
+              className="whitespace-nowrap rounded bg-blue-600 px-2.5 py-1.5 text-xs font-medium text-white hover:bg-blue-700"
             >
-              导出当前筛选
+              批量导入
             </button>
             <button
               type="button"
-              onClick={handleExportAll}
+              onClick={openCreateForm}
               className="whitespace-nowrap rounded border border-zinc-300 bg-white px-2.5 py-1.5 text-xs font-medium text-zinc-800 hover:bg-zinc-50"
             >
-              导出全部资料
+              新增资料
+            </button>
+            <button
+              type="button"
+              onClick={handleExportExcel}
+              className="whitespace-nowrap rounded border border-zinc-300 bg-white px-2.5 py-1.5 text-xs font-medium text-zinc-800 hover:bg-zinc-50"
+            >
+              导出Excel
             </button>
             <button
               type="button"
@@ -431,20 +457,6 @@ export function LinkLibraryPage() {
               className="whitespace-nowrap rounded border border-zinc-300 bg-white px-2.5 py-1.5 text-xs font-medium text-zinc-800 hover:bg-zinc-50 disabled:opacity-60"
             >
               {backingUp ? "备份中..." : "备份数据库"}
-            </button>
-            <button
-              type="button"
-              onClick={() => setImportOpen(true)}
-              className="whitespace-nowrap rounded border border-zinc-300 bg-white px-2.5 py-1.5 text-xs font-medium text-zinc-800 hover:bg-zinc-50"
-            >
-              批量导入
-            </button>
-            <button
-              type="button"
-              onClick={openCreateForm}
-              className="whitespace-nowrap rounded bg-blue-600 px-2.5 py-1.5 text-xs font-medium text-white hover:bg-blue-700"
-            >
-              新增资料
             </button>
           </div>
         </div>
@@ -458,30 +470,6 @@ export function LinkLibraryPage() {
           onReset={handleResetFilters}
           onDropdownApply={handleDropdownApply}
         />
-
-        {backupMessage ? (
-          <div className="shrink-0 whitespace-pre-line rounded border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-800">
-            {backupMessage}
-          </div>
-        ) : null}
-
-        {importHint ? (
-          <div className="shrink-0 rounded border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-800">
-            {importHint}
-          </div>
-        ) : null}
-
-        {batchEditMessage ? (
-          <div className="shrink-0 rounded border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-800">
-            {batchEditMessage}
-          </div>
-        ) : null}
-
-        {errorMessage ? (
-          <div className="shrink-0 rounded border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
-            {errorMessage}
-          </div>
-        ) : null}
 
         <div className="grid min-h-0 flex-1 grid-cols-1 gap-3 xl:grid-cols-[minmax(0,1fr)_340px]">
           <div className="flex min-h-0 min-w-0 flex-col gap-2">
@@ -520,20 +508,29 @@ export function LinkLibraryPage() {
                     onSelect={setSelectedItem}
                     onToggleRow={handleToggleRow}
                     onToggleAll={handleToggleAll}
+                    onCopyInfo={(item) => void handleCopyInfo(item)}
                     onEdit={openEditForm}
                     onDelete={(item) => void handleDelete(item)}
                   />
                 </div>
               )}
 
-              <div className="flex shrink-0 items-center justify-between border-t border-zinc-200 px-3 py-2 text-xs text-zinc-700">
-                <div>
+              <div className="flex shrink-0 items-center justify-between gap-3 border-t border-zinc-200 px-3 py-2 text-xs text-zinc-700">
+                <div className="shrink-0 whitespace-nowrap">
                   共 {total} 条，第 {currentPage} / {totalPages} 页
                 </div>
-                <div className="flex gap-2">
+                <div className="flex min-w-0 items-center gap-2">
+                  {toast ? (
+                    <span
+                      className={`max-w-[360px] truncate rounded px-2 py-0.5 text-xs ${getToastClassName(toast.variant)}`}
+                      title={toast.message}
+                    >
+                      {toast.message}
+                    </span>
+                  ) : null}
                   <button
                     type="button"
-                    className="rounded border border-zinc-300 px-2 py-1 hover:bg-zinc-50 disabled:opacity-50"
+                    className="shrink-0 rounded border border-zinc-300 px-2 py-1 hover:bg-zinc-50 disabled:opacity-50"
                     onClick={handlePrevPage}
                     disabled={offset === 0}
                   >
@@ -541,7 +538,7 @@ export function LinkLibraryPage() {
                   </button>
                   <button
                     type="button"
-                    className="rounded border border-zinc-300 px-2 py-1 hover:bg-zinc-50 disabled:opacity-50"
+                    className="shrink-0 rounded border border-zinc-300 px-2 py-1 hover:bg-zinc-50 disabled:opacity-50"
                     onClick={handleNextPage}
                     disabled={offset + PAGE_SIZE >= total}
                   >
@@ -559,6 +556,7 @@ export function LinkLibraryPage() {
               onDelete={(item) => void handleDelete(item)}
               onToggleFavorite={(item) => void handleToggleFavorite(item)}
               onToggleStatus={(item) => void handleToggleStatus(item)}
+              onShowToast={showToast}
             />
           </div>
         </div>
@@ -579,7 +577,9 @@ export function LinkLibraryPage() {
         onClose={() => setImportOpen(false)}
         onComplete={(hint) => {
           void refreshList(appliedFilters, offset, false);
-          setImportHint(hint ?? "");
+          if (hint) {
+            showToast(hint, "success");
+          }
         }}
       />
 

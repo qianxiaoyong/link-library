@@ -3,9 +3,10 @@
 import type { ResourceLink } from "@/shared/types/resource-link";
 import { LinkStatusBadge } from "./LinkStatusBadge";
 import {
-  formatDateTime,
-  formatResourceInfo,
+  displayValue,
+  getCategoryLabel,
   getPlatformLabel,
+  getPlatformTableLabel,
 } from "./link-ui-utils";
 
 type LinkTableProps = {
@@ -16,12 +17,14 @@ type LinkTableProps = {
   onSelect: (item: ResourceLink) => void;
   onToggleRow: (id: string, checked: boolean) => void;
   onToggleAll: (checked: boolean) => void;
+  onCopyInfo: (item: ResourceLink) => void;
   onEdit: (item: ResourceLink) => void;
   onDelete: (item: ResourceLink) => void;
 };
 
 const ROW_CLASS = "h-11 max-h-11";
-const CELL_CLASS = "overflow-hidden text-ellipsis whitespace-nowrap px-2 py-0 align-middle";
+const CELL_CLASS =
+  "overflow-hidden text-ellipsis whitespace-nowrap px-2 py-0 align-middle";
 
 export function LinkTable({
   items,
@@ -31,6 +34,7 @@ export function LinkTable({
   onSelect,
   onToggleRow,
   onToggleAll,
+  onCopyInfo,
   onEdit,
   onDelete,
 }: LinkTableProps) {
@@ -63,15 +67,18 @@ export function LinkTable({
               onChange={(event) => onToggleAll(event.target.checked)}
             />
           </th>
-          <th className={`${CELL_CLASS} w-12`}>序号</th>
-          <th className={`${CELL_CLASS} w-[16%]`}>标题</th>
-          <th className={`${CELL_CLASS} w-[22%]`}>原始链接</th>
-          <th className={`${CELL_CLASS} w-[18%]`}>资料信息</th>
-          <th className={`${CELL_CLASS} w-20`}>平台</th>
-          <th className={`${CELL_CLASS} w-16`}>状态</th>
-          <th className={`${CELL_CLASS} w-12`}>收藏</th>
-          <th className={`${CELL_CLASS} w-28`}>创建时间</th>
-          <th className={`${CELL_CLASS} w-28`}>操作</th>
+          <th className={`${CELL_CLASS} w-9`}>序号</th>
+          <th className={`${CELL_CLASS} w-[52px]`}>年份</th>
+          <th className={`${CELL_CLASS} w-[26%]`}>标题</th>
+          <th className={`${CELL_CLASS} w-[44px]`}>科目</th>
+          <th className={`${CELL_CLASS} w-[44px]`}>年级</th>
+          <th className={`${CELL_CLASS} w-[48px]`}>分类</th>
+          <th className={`${CELL_CLASS} w-[56px]`}>平台</th>
+          <th className={`${CELL_CLASS} w-[11%]`}>链接</th>
+          <th className={`${CELL_CLASS} w-[56px]`}>状态</th>
+          <th className={`${CELL_CLASS} w-[40px]`}>收藏</th>
+          <th className={`${CELL_CLASS} w-[10%]`}>备注</th>
+          <th className={`${CELL_CLASS} w-[140px]`}>操作</th>
         </tr>
       </thead>
       <tbody className="divide-y divide-zinc-100">
@@ -98,8 +105,38 @@ export function LinkTable({
               <td className={`${CELL_CLASS} text-zinc-600`}>
                 {offset + index + 1}
               </td>
-              <td className={`${CELL_CLASS} font-medium text-zinc-900`} title={item.title}>
+              <td
+                className={`${CELL_CLASS} text-zinc-700`}
+                title={item.resourceYear ?? undefined}
+              >
+                {displayValue(item.resourceYear)}
+              </td>
+              <td
+                className={`${CELL_CLASS} font-medium text-zinc-900`}
+                title={item.title}
+              >
                 {item.title}
+              </td>
+              <td
+                className={`${CELL_CLASS} text-zinc-700`}
+                title={item.subject ?? undefined}
+              >
+                {displayValue(item.subject)}
+              </td>
+              <td
+                className={`${CELL_CLASS} text-zinc-700`}
+                title={item.grade ?? undefined}
+              >
+                {displayValue(item.grade)}
+              </td>
+              <td className={`${CELL_CLASS} text-zinc-700`}>
+                {getCategoryLabel(item.resourceCategory)}
+              </td>
+              <td
+                className={`${CELL_CLASS} text-zinc-700`}
+                title={getPlatformLabel(item.platform)}
+              >
+                {getPlatformTableLabel(item.platform)}
               </td>
               <td className={CELL_CLASS}>
                 <a
@@ -113,23 +150,20 @@ export function LinkTable({
                   {item.rawUrl}
                 </a>
               </td>
-              <td className={`${CELL_CLASS} text-zinc-700`} title={formatResourceInfo(item)}>
-                {formatResourceInfo(item)}
-              </td>
-              <td className={`${CELL_CLASS} text-zinc-700`}>
-                {getPlatformLabel(item.platform)}
-              </td>
               <td className={CELL_CLASS}>
                 <LinkStatusBadge status={item.status} />
               </td>
               <td className={`${CELL_CLASS} text-center`}>
-                {item.favorite ? "★" : "—"}
+                {item.favorite ? "是" : "—"}
               </td>
-              <td className={`${CELL_CLASS} text-zinc-600`}>
-                {formatDateTime(item.createdAt)}
+              <td
+                className={`${CELL_CLASS} text-zinc-700`}
+                title={item.description ?? undefined}
+              >
+                {displayValue(item.description)}
               </td>
               <td className={CELL_CLASS}>
-                <div className="flex gap-1">
+                <div className="flex gap-1 text-xs">
                   <button
                     type="button"
                     className="text-blue-600 hover:underline"
@@ -139,6 +173,16 @@ export function LinkTable({
                     }}
                   >
                     查看
+                  </button>
+                  <button
+                    type="button"
+                    className="text-blue-600 hover:underline"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      onCopyInfo(item);
+                    }}
+                  >
+                    复制
                   </button>
                   <button
                     type="button"

@@ -21,9 +21,9 @@ type ImportDefaultsFormProps = {
 };
 
 const inputClassName =
-  "w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 outline-none focus:border-blue-500 disabled:bg-zinc-100";
+  "w-full min-w-0 rounded-md border border-zinc-300 bg-white px-2.5 py-1.5 text-sm text-zinc-900 outline-none focus:border-blue-500 disabled:bg-zinc-100";
 
-const labelClassName = "mb-1 block text-sm font-medium text-zinc-700";
+const labelClassName = "mb-0.5 block text-xs font-medium text-zinc-700";
 
 export const defaultImportDefaultsValues: ImportDefaultsValues = {
   resourceCategory: "",
@@ -50,13 +50,13 @@ export function ImportDefaultsForm({
   }
 
   return (
-    <section className="rounded-lg border border-zinc-200 bg-zinc-50 p-4">
-      <h3 className="mb-3 text-sm font-semibold text-zinc-800">批量填充信息</h3>
-      <p className="mb-3 text-xs text-zinc-600">
+    <section className="flex h-full flex-col rounded-lg border border-zinc-200 bg-zinc-50 p-3">
+      <h3 className="text-sm font-semibold text-zinc-800">批量填充信息</h3>
+      <p className="mt-1 text-xs text-zinc-600">
         以下字段将统一应用到本次导入的所有条目。
       </p>
 
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+      <div className="mt-3 space-y-2.5">
         <div>
           <label className={labelClassName} htmlFor="import-category">
             资料分类
@@ -98,7 +98,25 @@ export function ImportDefaultsForm({
           </select>
         </div>
 
-        <div className="md:col-span-2">
+        <div>
+          <label className={labelClassName} htmlFor="import-favorite">
+            是否收藏
+          </label>
+          <select
+            id="import-favorite"
+            className={inputClassName}
+            disabled={disabled}
+            value={values.favorite ? "true" : "false"}
+            onChange={(event) =>
+              updateField("favorite", event.target.value === "true")
+            }
+          >
+            <option value="false">否</option>
+            <option value="true">是</option>
+          </select>
+        </div>
+
+        <div>
           <label className={labelClassName} htmlFor="import-description">
             备注
           </label>
@@ -134,18 +152,6 @@ export function ImportDefaultsForm({
             />
           </div>
         ))}
-
-        <div className="flex items-end">
-          <label className="flex items-center gap-2 text-sm text-zinc-700">
-            <input
-              type="checkbox"
-              disabled={disabled}
-              checked={values.favorite}
-              onChange={(event) => updateField("favorite", event.target.checked)}
-            />
-            是否收藏
-          </label>
-        </div>
       </div>
     </section>
   );

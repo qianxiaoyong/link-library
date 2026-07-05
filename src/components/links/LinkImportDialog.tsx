@@ -15,11 +15,11 @@ import {
   type ImportDefaultsValues,
 } from "./ImportDefaultsForm";
 import {
+  ImportApplyResult,
   ImportFailuresTable,
   ImportPreviewTable,
   type PreviewItem,
 } from "./ImportPreviewTable";
-import { getPlatformLabel } from "./link-ui-utils";
 
 type LinkImportDialogProps = {
   open: boolean;
@@ -66,19 +66,28 @@ export function LinkImportDialog({
   const [applyError, setApplyError] = useState("");
 
   const hasPreview = parseResult !== null;
-  const showResult = applyResult !== null;
+  const hasParsedItems =
+    parseResult !== null && parseResult.summary.totalItems > 0;
 
   const canConfirmImport = useMemo(
-    () => previewItems.length > 0 && !applying && !showResult,
-    [previewItems.length, applying, showResult],
+    () => previewItems.length > 0 && !applying && applyResult === null,
+    [previewItems.length, applying, applyResult],
   );
 
   if (!open) return null;
 
-  function handleClearText() {
+  function resetImportState() {
     setText("");
+    setParseResult(null);
+    setPreviewItems([]);
+    setApplyResult(null);
     setInputError("");
     setParseError("");
+    setApplyError("");
+  }
+
+  function handleClearText() {
+    resetImportState();
   }
 
   async function handleParse() {
@@ -111,7 +120,7 @@ export function LinkImportDialog({
   }
 
   async function handleConfirmImport() {
-    if (previewItems.length === 0) return;
+    if (previewItems.length === 0 || applying || applyResult !== null) return;
 
     setApplying(true);
     setApplyError("");
@@ -122,6 +131,11 @@ export function LinkImportDialog({
         defaults: importDefaultsToInput(defaults),
       });
       setApplyResult(result);
+      onComplete(
+        result.summary.created > 0
+          ? "导入成功，若列表未显示，请检查当前筛选条件。"
+          : undefined,
+      );
     } catch (error) {
       setApplyError(`导入失败，请稍后重试。${getErrorMessage(error)}`);
     } finally {
@@ -130,41 +144,20 @@ export function LinkImportDialog({
   }
 
   function handleContinueImport() {
-    setText("");
-    setParseResult(null);
-    setPreviewItems([]);
-    setApplyResult(null);
-    setInputError("");
-    setParseError("");
-    setApplyError("");
-  }
-
-  function handleFinish() {
-    onComplete(
-      applyResult && applyResult.summary.created > 0
-        ? "导入成功，若列表未显示，请检查当前筛选条件。"
-        : undefined,
-    );
-    handleContinueImport();
-    onClose();
+    resetImportState();
   }
 
   function handleClose() {
     if (applying) return;
-    handleContinueImport();
+    resetImportState();
     onClose();
   }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="flex max-h-[92vh] w-full max-w-5xl flex-col rounded-lg bg-white shadow-xl">
-        <div className="flex items-center justify-between border-b border-zinc-200 px-6 py-4">
-          <div>
-            <h2 className="text-lg font-semibold text-zinc-900">批量导入</h2>
-            <p className="mt-1 text-sm text-zinc-600">
-              粘贴百度 / 夸克分享文本，解析后确认导入
-            </p>
-          </div>
+      <div className="flex max-h-[85vh] w-full max-w-[1160px] flex-col overflow-hidden rounded-lg bg-white shadow-xl">
+        <div className="flex shrink-0 items-center justify-between border-b border-zinc-200 px-6 py-4">
+          <h2 className="text-lg font-semibold text-zinc-900">批量导入</h2>
           <button
             type="button"
             className="text-zinc-500 hover:text-zinc-800 disabled:opacity-50"
@@ -175,231 +168,126 @@ export function LinkImportDialog({
           </button>
         </div>
 
-        <div className="space-y-4 overflow-y-auto px-6 py-4">
-          {!showResult ? (
-            <>
-              <section className="space-y-2">
-                <label className="block text-sm font-medium text-zinc-800">
-                  粘贴百度 / 夸克分享文本
-                </label>
-                <textarea
-                  className="min-h-40 w-full rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-blue-500"
-                  placeholder="可以粘贴单条或多条百度网盘、夸克网盘分享文本。"
-                  value={text}
-                  disabled={parsing || applying}
-                  onChange={(event) => {
-                    setText(event.target.value);
-                    if (inputError) setInputError("");
-                  }}
-                />
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    className="rounded-md bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700 disabled:opacity-60"
-                    onClick={() => void handleParse()}
-                    disabled={parsing || applying}
-                  >
-                    {parsing ? "解析中..." : "解析文本"}
-                  </button>
-                  <button
-                    type="button"
-                    className="rounded-md border border-zinc-300 px-4 py-2 text-sm hover:bg-zinc-50 disabled:opacity-60"
-                    onClick={handleClearText}
-                    disabled={parsing || applying}
-                  >
-                    清空
-                  </button>
+        <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-6 py-4">
+          <section className="rounded-lg border border-zinc-200 bg-white p-4">
+            <label className="mb-2 block text-sm font-medium text-zinc-800">
+              粘贴百度 / 夸克分享文本
+            </label>
+            <textarea
+              className="h-36 w-full resize-none overflow-y-auto rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-blue-500"
+              placeholder="可以粘贴单条或多条百度网盘、夸克网盘分享文本。"
+              value={text}
+              disabled={parsing || applying}
+              onChange={(event) => {
+                setText(event.target.value);
+                if (inputError) setInputError("");
+              }}
+            />
+            <div className="mt-2 flex gap-2">
+              <button
+                type="button"
+                className="rounded-md bg-blue-600 px-4 py-1.5 text-sm text-white hover:bg-blue-700 disabled:opacity-60"
+                onClick={() => void handleParse()}
+                disabled={parsing || applying}
+              >
+                {parsing ? "解析中..." : "解析文本"}
+              </button>
+              <button
+                type="button"
+                className="rounded-md border border-zinc-300 px-4 py-1.5 text-sm hover:bg-zinc-50 disabled:opacity-60"
+                onClick={handleClearText}
+                disabled={parsing || applying}
+              >
+                清空
+              </button>
+            </div>
+            {inputError ? (
+              <p className="mt-2 text-sm text-red-600">{inputError}</p>
+            ) : null}
+            {parseError ? (
+              <p className="mt-2 text-sm text-red-600">{parseError}</p>
+            ) : null}
+          </section>
+
+          {hasPreview ? (
+            <section className="rounded-lg border border-zinc-200 bg-zinc-50 px-4 py-2.5">
+              {parseResult && parseResult.summary.totalItems > 0 ? (
+                <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-zinc-700">
+                  <span>共解析 {parseResult.summary.totalItems} 条</span>
+                  <span>百度 {parseResult.summary.baiduCount} 条</span>
+                  <span>夸克 {parseResult.summary.quarkCount} 条</span>
+                  <span>失败 {parseResult.summary.failureCount} 条</span>
+                  <span className="font-medium text-zinc-900">
+                    当前待导入 {previewItems.length} 条
+                  </span>
                 </div>
-                {inputError ? (
-                  <p className="text-sm text-red-600">{inputError}</p>
-                ) : null}
-                {parseError ? (
-                  <p className="text-sm text-red-600">{parseError}</p>
-                ) : null}
+              ) : (
+                <p className="text-sm text-zinc-700">
+                  没有识别到可导入的百度或夸克链接，请检查粘贴内容。
+                </p>
+              )}
+            </section>
+          ) : null}
+
+          {hasParsedItems ? (
+            <div className="grid min-h-0 grid-cols-1 gap-4 lg:grid-cols-[minmax(0,65%)_minmax(0,35%)]">
+              <section className="flex min-h-0 flex-col rounded-lg border border-zinc-200 bg-white p-3">
+                <h3 className="mb-2 shrink-0 text-sm font-semibold text-zinc-800">
+                  预览列表
+                </h3>
+                <div className="min-h-0 max-h-64 overflow-auto">
+                  <ImportPreviewTable
+                    items={previewItems}
+                    onRemove={handleRemovePreviewItem}
+                    disabled={applying || applyResult !== null}
+                  />
+                </div>
               </section>
 
-              {hasPreview ? (
-                <>
-                  <section className="rounded-lg border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-700">
-                    {parseResult && parseResult.summary.totalItems > 0 ? (
-                      <p>
-                        共解析出 {parseResult.summary.totalItems} 条，百度{" "}
-                        {parseResult.summary.baiduCount} 条，夸克{" "}
-                        {parseResult.summary.quarkCount} 条，失败{" "}
-                        {parseResult.summary.failureCount} 条
-                      </p>
-                    ) : (
-                      <p>
-                        没有识别到可导入的百度或夸克链接，请检查粘贴内容。
-                      </p>
-                    )}
-                    <p className="mt-1 text-zinc-600">
-                      当前待导入 {previewItems.length} 条
-                    </p>
-                  </section>
+              <ImportDefaultsForm
+                values={defaults}
+                onChange={setDefaults}
+                disabled={applying || applyResult !== null}
+              />
+            </div>
+          ) : null}
 
-                  {parseResult && parseResult.summary.totalItems > 0 ? (
-                    <>
-                      <section className="space-y-2">
-                        <h3 className="text-sm font-semibold text-zinc-800">
-                          预览列表
-                        </h3>
-                        <ImportPreviewTable
-                          items={previewItems}
-                          onRemove={handleRemovePreviewItem}
-                          disabled={applying}
-                        />
-                      </section>
+          {parseResult && parseResult.failures.length > 0 ? (
+            <ImportFailuresTable failures={parseResult.failures} />
+          ) : null}
 
-                      {parseResult.failures.length > 0 ? (
-                        <ImportFailuresTable failures={parseResult.failures} />
-                      ) : null}
+          {applyResult ? <ImportApplyResult result={applyResult} /> : null}
 
-                      <ImportDefaultsForm
-                        values={defaults}
-                        onChange={setDefaults}
-                        disabled={applying}
-                      />
-
-                      {applyError ? (
-                        <p className="text-sm text-red-600">{applyError}</p>
-                      ) : null}
-                    </>
-                  ) : null}
-                </>
-              ) : null}
-            </>
-          ) : (
-            <section className="space-y-4">
-              <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3">
-                <h3 className="text-base font-semibold text-emerald-900">
-                  导入完成
-                </h3>
-                <p className="mt-2 text-sm text-emerald-800">
-                  成功导入：{applyResult.summary.created} 条
-                </p>
-                <p className="text-sm text-emerald-800">
-                  跳过重复：{applyResult.summary.skippedDuplicates} 条
-                </p>
-                <p className="text-sm text-emerald-800">
-                  失败：{applyResult.summary.failures} 条
-                </p>
-              </div>
-
-              {applyResult.skippedDuplicates.length > 0 ? (
-                <section className="space-y-2">
-                  <h3 className="text-sm font-semibold text-zinc-800">
-                    跳过的重复链接
-                  </h3>
-                  <div className="overflow-x-auto rounded-lg border border-zinc-200">
-                    <table className="min-w-full divide-y divide-zinc-200 text-sm">
-                      <thead className="bg-zinc-50">
-                        <tr>
-                          {["平台", "标题", "标准链接"].map((header) => (
-                            <th
-                              key={header}
-                              className="px-3 py-2 text-left font-medium text-zinc-700"
-                            >
-                              {header}
-                            </th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-zinc-100">
-                        {applyResult.skippedDuplicates.map((item) => (
-                          <tr key={`${item.platform}-${item.url}`}>
-                            <td className="px-3 py-2">
-                              {getPlatformLabel(item.platform)}
-                            </td>
-                            <td className="max-w-xs truncate px-3 py-2">
-                              {item.title}
-                            </td>
-                            <td className="max-w-xs truncate px-3 py-2 text-blue-600">
-                              {item.url}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </section>
-              ) : null}
-
-              {applyResult.failures.length > 0 ? (
-                <section className="space-y-2">
-                  <h3 className="text-sm font-semibold text-zinc-800">
-                    导入失败项
-                  </h3>
-                  <div className="overflow-x-auto rounded-lg border border-red-200">
-                    <table className="min-w-full divide-y divide-red-100 text-sm">
-                      <thead className="bg-red-50">
-                        <tr>
-                          <th className="px-3 py-2 text-left font-medium text-zinc-700">
-                            标题
-                          </th>
-                          <th className="px-3 py-2 text-left font-medium text-zinc-700">
-                            原因
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-red-100">
-                        {applyResult.failures.map((failure, index) => (
-                          <tr key={`${failure.title ?? "item"}-${index}`}>
-                            <td className="px-3 py-2">
-                              {failure.title ?? "—"}
-                            </td>
-                            <td className="px-3 py-2 text-red-700">
-                              {failure.reason}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </section>
-              ) : null}
-            </section>
-          )}
+          {applyError ? (
+            <p className="text-sm text-red-600">{applyError}</p>
+          ) : null}
         </div>
 
-        <div className="flex justify-end gap-2 border-t border-zinc-200 px-6 py-4">
-          {!showResult ? (
-            <>
-              <button
-                type="button"
-                className="rounded-md border border-zinc-300 px-4 py-2 text-sm hover:bg-zinc-50 disabled:opacity-60"
-                onClick={handleClose}
-                disabled={applying}
-              >
-                取消
-              </button>
-              <button
-                type="button"
-                className="rounded-md bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700 disabled:opacity-60"
-                onClick={() => void handleConfirmImport()}
-                disabled={!canConfirmImport}
-              >
-                {applying ? "正在导入..." : "确认导入"}
-              </button>
-            </>
-          ) : (
-            <>
-              <button
-                type="button"
-                className="rounded-md border border-zinc-300 px-4 py-2 text-sm hover:bg-zinc-50"
-                onClick={handleContinueImport}
-              >
-                继续导入
-              </button>
-              <button
-                type="button"
-                className="rounded-md bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700"
-                onClick={handleFinish}
-              >
-                完成
-              </button>
-            </>
-          )}
+        <div className="flex shrink-0 justify-end gap-2 border-t border-zinc-200 px-6 py-4">
+          <button
+            type="button"
+            className="rounded-md border border-zinc-300 px-4 py-2 text-sm hover:bg-zinc-50 disabled:opacity-60"
+            onClick={handleClose}
+            disabled={applying}
+          >
+            取消
+          </button>
+          <button
+            type="button"
+            className="rounded-md border border-zinc-300 px-4 py-2 text-sm hover:bg-zinc-50 disabled:opacity-60"
+            onClick={handleContinueImport}
+            disabled={applying}
+          >
+            继续导入
+          </button>
+          <button
+            type="button"
+            className="rounded-md bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700 disabled:opacity-60"
+            onClick={() => void handleConfirmImport()}
+            disabled={!canConfirmImport}
+          >
+            {applying ? "正在导入..." : "确认导入"}
+          </button>
         </div>
       </div>
     </div>

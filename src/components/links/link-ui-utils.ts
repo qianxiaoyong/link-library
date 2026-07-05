@@ -38,6 +38,12 @@ export function getPlatformLabel(platform: keyof typeof LINK_PLATFORM_LABELS): s
   return LINK_PLATFORM_LABELS[platform];
 }
 
+export function getPlatformTableLabel(
+  platform: keyof typeof LINK_PLATFORM_LABELS,
+): string {
+  return getPlatformLabel(platform).replace(/网盘$/, "");
+}
+
 export function getStatusLabel(status: LinkStatus): string {
   return LINK_STATUS_LABELS[status];
 }
