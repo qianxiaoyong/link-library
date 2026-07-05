@@ -20,6 +20,7 @@ import {
   LinkBatchEditDialog,
   type BatchEditResult,
 } from "./LinkBatchEditDialog";
+import { ConfirmDialog } from "./ConfirmDialog";
 import {
   defaultLinkFilterValues,
   LinkFilters,
@@ -96,6 +97,9 @@ export function LinkLibraryPage() {
   const [batchEditResult, setBatchEditResult] = useState<BatchEditResult | null>(
     null,
   );
+  const [deleteConfirmItem, setDeleteConfirmItem] =
+    useState<ResourceLink | null>(null);
+  const [deleteConfirming, setDeleteConfirming] = useState(false);
 
   const totalPages = useMemo(
     () => Math.max(1, Math.ceil(total / PAGE_SIZE)),
@@ -251,11 +255,15 @@ export function LinkLibraryPage() {
     }
   }
 
-  async function handleDelete(item: ResourceLink) {
-    const confirmed = window.confirm(
-      "确定要删除这条资料吗？此操作无法撤销。",
-    );
-    if (!confirmed) return;
+  function requestDelete(item: ResourceLink) {
+    setDeleteConfirmItem(item);
+  }
+
+  async function confirmDelete() {
+    if (!deleteConfirmItem) return;
+
+    setDeleteConfirming(true);
+    const item = deleteConfirmItem;
 
     try {
       await deleteLink(item.id);
@@ -270,10 +278,13 @@ export function LinkLibraryPage() {
         next.delete(item.id);
         return next;
       });
+      setDeleteConfirmItem(null);
       await refreshList(appliedFilters, offset, false);
       showToast("删除资料成功。", "success");
     } catch (error) {
       showToast(getErrorMessage(error), "error");
+    } finally {
+      setDeleteConfirming(false);
     }
   }
 
@@ -510,7 +521,7 @@ export function LinkLibraryPage() {
                     onToggleAll={handleToggleAll}
                     onCopyInfo={(item) => void handleCopyInfo(item)}
                     onEdit={openEditForm}
-                    onDelete={(item) => void handleDelete(item)}
+                    onDelete={requestDelete}
                   />
                 </div>
               )}
@@ -553,7 +564,7 @@ export function LinkLibraryPage() {
             <LinkDetailPanel
               item={selectedItem}
               onEdit={openEditForm}
-              onDelete={(item) => void handleDelete(item)}
+              onDelete={requestDelete}
               onToggleFavorite={(item) => void handleToggleFavorite(item)}
               onToggleStatus={(item) => void handleToggleStatus(item)}
               onShowToast={showToast}
@@ -591,6 +602,19 @@ export function LinkLibraryPage() {
         result={batchEditResult}
         onClose={closeBatchEditDialog}
         onSubmit={(patch) => void handleBatchEditSubmit(patch)}
+      />
+
+      <ConfirmDialog
+        open={deleteConfirmItem !== null}
+        title="删除资料"
+        message="确定要删除这条资料吗？此操作无法撤销。"
+        confirmLabel="删除"
+        variant="danger"
+        confirming={deleteConfirming}
+        onConfirm={() => void confirmDelete()}
+        onCancel={() => {
+          if (!deleteConfirming) setDeleteConfirmItem(null);
+        }}
       />
     </div>
   );
