@@ -69,7 +69,7 @@ export function LinkTable({
           </th>
           <th className={`${CELL_CLASS} w-9`}>序号</th>
           <th className={`${CELL_CLASS} w-[52px]`}>年份</th>
-          <th className={`${CELL_CLASS} w-[26%]`}>标题</th>
+          <th className={`${CELL_CLASS} w-[28%]`}>标题</th>
           <th className={`${CELL_CLASS} w-[44px]`}>科目</th>
           <th className={`${CELL_CLASS} w-[44px]`}>年级</th>
           <th className={`${CELL_CLASS} w-[48px]`}>分类</th>
@@ -78,7 +78,7 @@ export function LinkTable({
           <th className={`${CELL_CLASS} w-[56px]`}>状态</th>
           <th className={`${CELL_CLASS} w-[40px]`}>收藏</th>
           <th className={`${CELL_CLASS} w-[10%]`}>备注</th>
-          <th className={`${CELL_CLASS} w-[140px]`}>操作</th>
+          <th className={`${CELL_CLASS} w-[96px]`}>操作</th>
         </tr>
       </thead>
       <tbody className="divide-y divide-zinc-100">
@@ -164,16 +164,6 @@ export function LinkTable({
               </td>
               <td className={CELL_CLASS}>
                 <div className="flex gap-1 text-xs">
-                  <button
-                    type="button"
-                    className="text-blue-600 hover:underline"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      onSelect(item);
-                    }}
-                  >
-                    查看
-                  </button>
                   <button
                     type="button"
                     className="text-blue-600 hover:underline"

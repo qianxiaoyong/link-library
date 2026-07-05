@@ -143,10 +143,6 @@ export function LinkImportDialog({
     }
   }
 
-  function handleContinueImport() {
-    resetImportState();
-  }
-
   function handleClose() {
     if (applying) return;
     resetImportState();
@@ -155,9 +151,9 @@ export function LinkImportDialog({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="flex max-h-[85vh] w-full max-w-[1160px] flex-col overflow-hidden rounded-lg bg-white shadow-xl">
-        <div className="flex shrink-0 items-center justify-between border-b border-zinc-200 px-6 py-4">
-          <h2 className="text-lg font-semibold text-zinc-900">批量导入</h2>
+      <div className="flex h-[85vh] max-h-[85vh] w-full max-w-[1160px] flex-col overflow-hidden rounded-lg bg-white shadow-xl">
+        <div className="flex shrink-0 items-center justify-between border-b border-zinc-200 px-5 py-3">
+          <h2 className="text-base font-semibold text-zinc-900">批量导入</h2>
           <button
             type="button"
             className="text-zinc-500 hover:text-zinc-800 disabled:opacity-50"
@@ -168,61 +164,71 @@ export function LinkImportDialog({
           </button>
         </div>
 
-        <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-6 py-4">
-          <section className="rounded-lg border border-zinc-200 bg-white p-4">
-            <label className="mb-2 block text-sm font-medium text-zinc-800">
-              粘贴百度 / 夸克分享文本
-            </label>
-            <textarea
-              className="h-36 w-full resize-none overflow-y-auto rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-blue-500"
-              placeholder="可以粘贴单条或多条百度网盘、夸克网盘分享文本。"
-              value={text}
-              disabled={parsing || applying}
-              onChange={(event) => {
-                setText(event.target.value);
-                if (inputError) setInputError("");
-              }}
-            />
-            <div className="mt-2 flex gap-2">
-              <button
-                type="button"
-                className="rounded-md bg-blue-600 px-4 py-1.5 text-sm text-white hover:bg-blue-700 disabled:opacity-60"
-                onClick={() => void handleParse()}
+        <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-hidden px-5 py-3">
+          <section className="shrink-0 rounded-lg border border-zinc-200 bg-white px-3 py-2">
+            <div className="flex gap-2">
+              <textarea
+                className={`min-w-0 flex-1 resize-none overflow-y-auto rounded-md border border-zinc-300 px-2.5 py-1.5 text-sm text-zinc-900 outline-none focus:border-blue-500 ${
+                  hasParsedItems ? "h-16" : "h-20"
+                }`}
+                placeholder="粘贴百度 / 夸克分享文本（可粘贴单条或多条）"
+                title="粘贴百度 / 夸克分享文本"
+                value={text}
                 disabled={parsing || applying}
-              >
-                {parsing ? "解析中..." : "解析文本"}
-              </button>
-              <button
-                type="button"
-                className="rounded-md border border-zinc-300 px-4 py-1.5 text-sm hover:bg-zinc-50 disabled:opacity-60"
-                onClick={handleClearText}
-                disabled={parsing || applying}
-              >
-                清空
-              </button>
+                onChange={(event) => {
+                  setText(event.target.value);
+                  if (inputError) setInputError("");
+                }}
+              />
+              <div className="flex shrink-0 flex-col gap-1.5">
+                <button
+                  type="button"
+                  className="whitespace-nowrap rounded-md bg-blue-600 px-3 py-1.5 text-xs text-white hover:bg-blue-700 disabled:opacity-60"
+                  onClick={() => void handleParse()}
+                  disabled={parsing || applying}
+                >
+                  {parsing ? "解析中..." : "解析文本"}
+                </button>
+                <button
+                  type="button"
+                  className="whitespace-nowrap rounded-md border border-zinc-300 px-3 py-1.5 text-xs hover:bg-zinc-50 disabled:opacity-60"
+                  onClick={handleClearText}
+                  disabled={parsing || applying}
+                >
+                  清空
+                </button>
+              </div>
             </div>
             {inputError ? (
-              <p className="mt-2 text-sm text-red-600">{inputError}</p>
+              <p className="mt-1 text-xs text-red-600">{inputError}</p>
             ) : null}
             {parseError ? (
-              <p className="mt-2 text-sm text-red-600">{parseError}</p>
+              <p className="mt-1 text-xs text-red-600">{parseError}</p>
             ) : null}
           </section>
 
           {hasPreview ? (
-            <section className="rounded-lg border border-zinc-200 bg-zinc-50 px-4 py-2.5">
+            <section className="shrink-0 rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-1.5">
               {parseResult && parseResult.summary.totalItems > 0 ? (
-                <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-zinc-700">
-                  <span>共解析 {parseResult.summary.totalItems} 条</span>
-                  <span>百度 {parseResult.summary.baiduCount} 条</span>
-                  <span>夸克 {parseResult.summary.quarkCount} 条</span>
-                  <span>失败 {parseResult.summary.failureCount} 条</span>
-                  <span className="font-medium text-zinc-900">
+                <div className="flex flex-nowrap gap-x-3 overflow-hidden text-xs text-zinc-700">
+                  <span className="shrink-0">
+                    共解析 {parseResult.summary.totalItems} 条
+                  </span>
+                  <span className="shrink-0">
+                    百度 {parseResult.summary.baiduCount} 条
+                  </span>
+                  <span className="shrink-0">
+                    夸克 {parseResult.summary.quarkCount} 条
+                  </span>
+                  <span className="shrink-0">
+                    失败 {parseResult.summary.failureCount} 条
+                  </span>
+                  <span className="shrink-0 font-medium text-zinc-900">
                     当前待导入 {previewItems.length} 条
                   </span>
                 </div>
               ) : (
-                <p className="text-sm text-zinc-700">
+                <p className="text-xs text-zinc-700">
                   没有识别到可导入的百度或夸克链接，请检查粘贴内容。
                 </p>
               )}
@@ -230,43 +236,49 @@ export function LinkImportDialog({
           ) : null}
 
           {hasParsedItems ? (
-            <div className="grid min-h-0 grid-cols-1 gap-4 lg:grid-cols-[minmax(0,65%)_minmax(0,35%)]">
-              <section className="flex min-h-0 flex-col rounded-lg border border-zinc-200 bg-white p-3">
-                <h3 className="mb-2 shrink-0 text-sm font-semibold text-zinc-800">
+            <div className="grid min-h-0 flex-1 grid-cols-1 gap-2 overflow-hidden lg:grid-cols-[minmax(0,62%)_minmax(0,38%)]">
+              <section className="flex min-h-0 flex-col gap-2 overflow-hidden rounded-lg border border-zinc-200 bg-white p-2">
+                <h3 className="shrink-0 text-sm font-semibold text-zinc-800">
                   预览列表
                 </h3>
-                <div className="min-h-0 max-h-64 overflow-auto">
+                <div className="min-h-0 flex-1 overflow-auto">
                   <ImportPreviewTable
                     items={previewItems}
                     onRemove={handleRemovePreviewItem}
                     disabled={applying || applyResult !== null}
                   />
                 </div>
+
+                {parseResult && parseResult.failures.length > 0 ? (
+                  <ImportFailuresTable failures={parseResult.failures} />
+                ) : null}
+
+                {applyResult ? <ImportApplyResult result={applyResult} /> : null}
+
+                {applyError ? (
+                  <p className="shrink-0 text-xs text-red-600">{applyError}</p>
+                ) : null}
               </section>
 
-              <ImportDefaultsForm
-                values={defaults}
-                onChange={setDefaults}
-                disabled={applying || applyResult !== null}
-              />
+              <div className="min-w-0 self-start">
+                <ImportDefaultsForm
+                  values={defaults}
+                  onChange={setDefaults}
+                  disabled={applying || applyResult !== null}
+                />
+              </div>
             </div>
-          ) : null}
-
-          {parseResult && parseResult.failures.length > 0 ? (
-            <ImportFailuresTable failures={parseResult.failures} />
-          ) : null}
-
-          {applyResult ? <ImportApplyResult result={applyResult} /> : null}
-
-          {applyError ? (
-            <p className="text-sm text-red-600">{applyError}</p>
-          ) : null}
+          ) : (
+            <div className="flex min-h-0 flex-1 items-center justify-center rounded-lg border border-dashed border-zinc-200 bg-zinc-50 text-sm text-zinc-500">
+              粘贴分享文本后点击「解析文本」
+            </div>
+          )}
         </div>
 
-        <div className="flex shrink-0 justify-end gap-2 border-t border-zinc-200 px-6 py-4">
+        <div className="flex shrink-0 justify-end gap-2 border-t border-zinc-200 px-5 py-3">
           <button
             type="button"
-            className="rounded-md border border-zinc-300 px-4 py-2 text-sm hover:bg-zinc-50 disabled:opacity-60"
+            className="rounded-md border border-zinc-300 px-4 py-1.5 text-sm hover:bg-zinc-50 disabled:opacity-60"
             onClick={handleClose}
             disabled={applying}
           >
@@ -274,15 +286,7 @@ export function LinkImportDialog({
           </button>
           <button
             type="button"
-            className="rounded-md border border-zinc-300 px-4 py-2 text-sm hover:bg-zinc-50 disabled:opacity-60"
-            onClick={handleContinueImport}
-            disabled={applying}
-          >
-            继续导入
-          </button>
-          <button
-            type="button"
-            className="rounded-md bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700 disabled:opacity-60"
+            className="rounded-md bg-blue-600 px-4 py-1.5 text-sm text-white hover:bg-blue-700 disabled:opacity-60"
             onClick={() => void handleConfirmImport()}
             disabled={!canConfirmImport}
           >

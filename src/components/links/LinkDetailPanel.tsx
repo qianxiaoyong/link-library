@@ -135,19 +135,6 @@ export function LinkDetailPanel({
           }
         />
         <DetailRow
-          label="标准链接"
-          value={
-            <a
-              href={item.url}
-              target="_blank"
-              rel="noreferrer noopener"
-              className="text-blue-600 hover:underline"
-            >
-              {item.url}
-            </a>
-          }
-        />
-        <DetailRow
           label="提取码"
           value={item.accessCode ? item.accessCode : "无"}
         />

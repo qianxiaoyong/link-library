@@ -21,9 +21,7 @@ type ImportDefaultsFormProps = {
 };
 
 const inputClassName =
-  "w-full min-w-0 rounded-md border border-zinc-300 bg-white px-2.5 py-1.5 text-sm text-zinc-900 outline-none focus:border-blue-500 disabled:bg-zinc-100";
-
-const labelClassName = "mb-0.5 block text-xs font-medium text-zinc-700";
+  "h-7 w-full min-w-0 rounded border border-zinc-300 bg-white px-2 py-0 text-sm text-zinc-900 outline-none focus:border-blue-500 disabled:bg-zinc-100";
 
 export const defaultImportDefaultsValues: ImportDefaultsValues = {
   resourceCategory: "",
@@ -36,6 +34,51 @@ export const defaultImportDefaultsValues: ImportDefaultsValues = {
   status: "normal",
   favorite: false,
 };
+
+function FormSection({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="py-4 first:pt-0 last:pb-0">
+      <div className="mb-1.5 text-xs font-medium text-zinc-700">【{title}】</div>
+      <div className="space-y-1.5">{children}</div>
+    </div>
+  );
+}
+
+function FormRow({ children }: { children: React.ReactNode }) {
+  return <div className="grid grid-cols-2 gap-x-2">{children}</div>;
+}
+
+function InlineField({
+  id,
+  label,
+  labelWidth = "w-14",
+  className = "",
+  children,
+}: {
+  id: string;
+  label: string;
+  labelWidth?: string;
+  className?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className={`flex min-w-0 items-center gap-1 ${className}`}>
+      <label
+        className={`${labelWidth} shrink-0 text-right text-xs text-zinc-600`}
+        htmlFor={id}
+      >
+        {label}
+      </label>
+      <div className="min-w-0 flex-1">{children}</div>
+    </div>
+  );
+}
 
 export function ImportDefaultsForm({
   values,
@@ -50,108 +93,142 @@ export function ImportDefaultsForm({
   }
 
   return (
-    <section className="flex h-full flex-col rounded-lg border border-zinc-200 bg-zinc-50 p-3">
-      <h3 className="text-sm font-semibold text-zinc-800">批量填充信息</h3>
-      <p className="mt-1 text-xs text-zinc-600">
-        以下字段将统一应用到本次导入的所有条目。
-      </p>
+    <section className="shrink-0 rounded-lg border border-zinc-200 bg-zinc-50 p-2.5">
+      <div className="mb-5">
+        <h3 className="text-sm font-semibold text-zinc-800">批量填充信息</h3>
+        <p className="mt-0.5 text-[11px] leading-tight text-zinc-500">
+          统一应用到本次导入的所有条目
+        </p>
+      </div>
 
-      <div className="mt-3 space-y-2.5">
-        <div>
-          <label className={labelClassName} htmlFor="import-category">
-            资料分类
-          </label>
-          <select
-            id="import-category"
-            className={inputClassName}
-            disabled={disabled}
-            value={values.resourceCategory}
-            onChange={(event) =>
-              updateField(
-                "resourceCategory",
-                event.target.value as ResourceCategory | "",
-              )
-            }
-          >
-            <option value="">空</option>
-            <option value="practice">练习</option>
-            <option value="paper">试卷</option>
-            <option value="special">专项</option>
-          </select>
-        </div>
-
-        <div>
-          <label className={labelClassName} htmlFor="import-status">
-            状态
-          </label>
-          <select
-            id="import-status"
-            className={inputClassName}
-            disabled={disabled}
-            value={values.status}
-            onChange={(event) =>
-              updateField("status", event.target.value as LinkStatus)
-            }
-          >
-            <option value="normal">正常</option>
-            <option value="invalid">已失效</option>
-          </select>
-        </div>
-
-        <div>
-          <label className={labelClassName} htmlFor="import-favorite">
-            是否收藏
-          </label>
-          <select
-            id="import-favorite"
-            className={inputClassName}
-            disabled={disabled}
-            value={values.favorite ? "true" : "false"}
-            onChange={(event) =>
-              updateField("favorite", event.target.value === "true")
-            }
-          >
-            <option value="false">否</option>
-            <option value="true">是</option>
-          </select>
-        </div>
-
-        <div>
-          <label className={labelClassName} htmlFor="import-description">
-            备注
-          </label>
-          <textarea
-            id="import-description"
-            className={inputClassName}
-            rows={2}
-            disabled={disabled}
-            value={values.description}
-            onChange={(event) => updateField("description", event.target.value)}
-          />
-        </div>
-
-        {(
-          [
-            ["import-school-stage", "学段", "schoolStage"],
-            ["import-grade", "年级", "grade"],
-            ["import-semester", "学期", "semester"],
-            ["import-subject", "科目", "subject"],
-            ["import-resource-year", "资料年份", "resourceYear"],
-          ] as const
-        ).map(([id, label, key]) => (
-          <div key={id}>
-            <label className={labelClassName} htmlFor={id}>
-              {label}
-            </label>
+      <div className="divide-y divide-zinc-200/80">
+        <FormSection title="基础">
+        <FormRow>
+          <InlineField id="import-resource-year" label="资料年份">
             <input
-              id={id}
+              id="import-resource-year"
               className={inputClassName}
               disabled={disabled}
-              value={values[key]}
-              onChange={(event) => updateField(key, event.target.value)}
+              value={values.resourceYear}
+              onChange={(event) =>
+                updateField("resourceYear", event.target.value)
+              }
             />
-          </div>
-        ))}
+          </InlineField>
+          <InlineField id="import-category" label="资料分类">
+            <select
+              id="import-category"
+              className={inputClassName}
+              disabled={disabled}
+              value={values.resourceCategory}
+              onChange={(event) =>
+                updateField(
+                  "resourceCategory",
+                  event.target.value as ResourceCategory | "",
+                )
+              }
+            >
+              <option value="">空</option>
+              <option value="practice">练习</option>
+              <option value="paper">试卷</option>
+              <option value="special">专项</option>
+            </select>
+          </InlineField>
+        </FormRow>
+      </FormSection>
+
+      <FormSection title="学段信息">
+        <FormRow>
+          <InlineField id="import-school-stage" label="学段">
+            <input
+              id="import-school-stage"
+              className={inputClassName}
+              disabled={disabled}
+              value={values.schoolStage}
+              onChange={(event) =>
+                updateField("schoolStage", event.target.value)
+              }
+            />
+          </InlineField>
+          <InlineField id="import-subject" label="科目">
+            <input
+              id="import-subject"
+              className={inputClassName}
+              disabled={disabled}
+              value={values.subject}
+              onChange={(event) => updateField("subject", event.target.value)}
+            />
+          </InlineField>
+        </FormRow>
+        <FormRow>
+          <InlineField id="import-grade" label="年级">
+            <input
+              id="import-grade"
+              className={inputClassName}
+              disabled={disabled}
+              value={values.grade}
+              onChange={(event) => updateField("grade", event.target.value)}
+            />
+          </InlineField>
+          <InlineField id="import-semester" label="学期">
+            <input
+              id="import-semester"
+              className={inputClassName}
+              disabled={disabled}
+              value={values.semester}
+              onChange={(event) => updateField("semester", event.target.value)}
+            />
+          </InlineField>
+        </FormRow>
+      </FormSection>
+
+      <FormSection title="其他">
+        <InlineField id="import-description" label="备注">
+          <input
+            id="import-description"
+            className={inputClassName}
+            disabled={disabled}
+            value={values.description}
+            onChange={(event) =>
+              updateField("description", event.target.value)
+            }
+          />
+        </InlineField>
+        <FormRow>
+          <InlineField
+            id="import-favorite"
+            label="是否收藏"
+            labelWidth="w-14"
+          >
+            <select
+              id="import-favorite"
+              className={inputClassName}
+              disabled={disabled}
+              value={values.favorite ? "true" : "false"}
+              onChange={(event) =>
+                updateField("favorite", event.target.value === "true")
+              }
+            >
+              <option value="false">否</option>
+              <option value="true">是</option>
+            </select>
+          </InlineField>
+          <InlineField id="import-status" label="状态">
+            <select
+              id="import-status"
+              className={inputClassName}
+              disabled={disabled}
+              value={values.status}
+              onChange={(event) =>
+                updateField("status", event.target.value as LinkStatus)
+              }
+            >
+              <option value="normal">正常</option>
+              <option value="invalid">已失效</option>
+            </select>
+          </InlineField>
+        </FormRow>
+      </FormSection>
       </div>
     </section>
   );
