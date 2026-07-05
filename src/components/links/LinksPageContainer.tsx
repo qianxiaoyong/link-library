@@ -17,6 +17,7 @@ function mergeDeepLinkIntoFilterValues(
   return {
     ...defaultLinkFilterValues,
     q: deepLink.q ?? "",
+    platform: deepLink.platform,
     resourceYear: deepLink.resourceYear ?? "",
     semester: deepLink.semester ?? "",
     schoolStage: deepLink.schoolStage ?? "",

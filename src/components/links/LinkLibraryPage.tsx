@@ -8,6 +8,7 @@ import {
   deleteLink,
   downloadExportExcel,
   getErrorMessage,
+  getLink,
   listLinks,
   updateLink,
 } from "@/shared/api/links-client";
@@ -395,6 +396,52 @@ export function LinkLibraryPage({
     }
   }
 
+  async function handleBatchCopySourceText() {
+    const ids = Array.from(selectedRowIds);
+    if (ids.length === 0) {
+      return;
+    }
+
+    const itemById = new Map(items.map((item) => [item.id, item]));
+    const sourceTexts: string[] = [];
+
+    for (const id of ids) {
+      let item = itemById.get(id);
+      if (!item) {
+        try {
+          item = await getLink(id);
+        } catch {
+          continue;
+        }
+      }
+
+      const text = item.sourceText?.trim();
+      if (text) {
+        sourceTexts.push(text);
+      }
+    }
+
+    if (sourceTexts.length === 0) {
+      showToast("所选资料均没有原始输入内容。", "warning");
+      return;
+    }
+
+    try {
+      await copyToClipboard(sourceTexts.join("\n\n"));
+      const skippedCount = ids.length - sourceTexts.length;
+      if (skippedCount > 0) {
+        showToast(
+          `已复制 ${sourceTexts.length} 条原始输入，${skippedCount} 条无内容已跳过。`,
+          "success",
+        );
+      } else {
+        showToast(`已复制 ${sourceTexts.length} 条原始输入。`, "success");
+      }
+    } catch {
+      showToast("复制失败，请手动复制。", "error");
+    }
+  }
+
   function handlePrevPage() {
     setOffset((current) => Math.max(0, current - PAGE_SIZE));
   }
@@ -559,6 +606,13 @@ export function LinkLibraryPage({
             {selectedRowIds.size > 0 ? (
               <div className="flex shrink-0 flex-wrap items-center gap-3 rounded border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-900">
                 <span>已选择 {selectedRowIds.size} 条</span>
+                <button
+                  type="button"
+                  className="rounded border border-blue-300 bg-white px-2 py-0.5 text-xs font-medium text-blue-700 hover:bg-blue-100"
+                  onClick={() => void handleBatchCopySourceText()}
+                >
+                  批量复制
+                </button>
                 <button
                   type="button"
                   className="rounded border border-blue-300 bg-white px-2 py-0.5 text-xs font-medium text-blue-700 hover:bg-blue-100"

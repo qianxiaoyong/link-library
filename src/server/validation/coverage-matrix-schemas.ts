@@ -1,7 +1,8 @@
 import { z } from "zod";
-import { RESOURCE_CATEGORIES } from "@/shared/constants/link-taxonomy";
+import { LINK_PLATFORMS, RESOURCE_CATEGORIES } from "@/shared/constants/link-taxonomy";
 
 export const coverageMatrixQuerySchema = z.object({
+  platform: z.enum(LINK_PLATFORMS).optional(),
   resourceYear: z.string().optional(),
   semester: z.string().optional(),
   schoolStage: z.string().optional(),

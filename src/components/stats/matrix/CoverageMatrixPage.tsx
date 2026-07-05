@@ -42,6 +42,7 @@ function filtersToParams(
   filters: MatrixFilterValues,
 ): Parameters<typeof fetchCoverageMatrix>[0] {
   return {
+    platform: filters.platform || undefined,
     resourceYear: filters.resourceYear || undefined,
     semester: filters.semester || undefined,
     schoolStage: filters.schoolStage || undefined,

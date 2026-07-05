@@ -1,8 +1,9 @@
 import type { ApiEnvelope } from "@/shared/api/api-envelope";
-import type { ResourceCategory } from "@/shared/types/resource-link";
+import type { LinkPlatform, ResourceCategory } from "@/shared/types/resource-link";
 import type { CoverageMatrixResult } from "@/shared/stats/coverage-matrix";
 
 export type CoverageMatrixParams = {
+  platform?: LinkPlatform;
   resourceYear?: string;
   semester?: string;
   schoolStage?: string;
@@ -78,6 +79,9 @@ function buildCoverageMatrixQueryString(
 ): string {
   const searchParams = new URLSearchParams();
 
+  if (params.platform) {
+    searchParams.set("platform", params.platform);
+  }
   if (params.resourceYear?.trim()) {
     searchParams.set("resourceYear", params.resourceYear.trim());
   }

@@ -42,6 +42,7 @@ function main(): void {
 
     assert.deepEqual(decoded, {
       q: "一本预备",
+      platform: undefined,
       resourceYear: "2026",
       semester: undefined,
       schoolStage: undefined,

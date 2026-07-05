@@ -1,7 +1,8 @@
-import type { ResourceCategory } from "@/shared/types/resource-link";
+import type { LinkPlatform, ResourceCategory } from "@/shared/types/resource-link";
 
 export type LinksDeepLinkParams = {
   q?: string;
+  platform?: LinkPlatform;
   resourceYear?: string;
   semester?: string;
   schoolStage?: string;
@@ -11,6 +12,7 @@ export type LinksDeepLinkParams = {
 };
 
 export type StatsDrillDownFilters = {
+  platform?: LinkPlatform | "";
   resourceYear?: string;
   semester?: string;
   schoolStage?: string;
@@ -32,6 +34,17 @@ const RESOURCE_CATEGORY_SET = new Set<ResourceCategory>([
   "special",
 ]);
 
+const LINK_PLATFORM_SET = new Set<LinkPlatform>(["baidu", "quark"]);
+
+function parseLinkPlatform(value: string | null): LinkPlatform | undefined {
+  if (!value) {
+    return undefined;
+  }
+  return LINK_PLATFORM_SET.has(value as LinkPlatform)
+    ? (value as LinkPlatform)
+    : undefined;
+}
+
 function parseResourceCategory(
   value: string | null,
 ): ResourceCategory | undefined {
@@ -50,6 +63,9 @@ export function encodeLinksDeepLinkParams(
 
   if (params.q?.trim()) {
     searchParams.set("q", params.q.trim());
+  }
+  if (params.platform) {
+    searchParams.set("platform", params.platform);
   }
   if (params.resourceYear?.trim()) {
     searchParams.set("resourceYear", params.resourceYear.trim());
@@ -78,6 +94,7 @@ export function decodeLinksDeepLinkParams(
 ): LinksDeepLinkParams {
   return {
     q: searchParams.get("q")?.trim() || undefined,
+    platform: parseLinkPlatform(searchParams.get("platform")),
     resourceYear: searchParams.get("resourceYear")?.trim() || undefined,
     semester: searchParams.get("semester")?.trim() || undefined,
     schoolStage: searchParams.get("schoolStage")?.trim() || undefined,
@@ -108,6 +125,7 @@ export function buildStatsBookTitleDeepLink(
 ): string {
   return buildLinksPagePath({
     q: bookTitle,
+    platform: statsFilters.platform || undefined,
     resourceYear: normalizeDeepLinkField(statsFilters.resourceYear),
     semester: normalizeDeepLinkField(statsFilters.semester),
     schoolStage: normalizeDeepLinkField(statsFilters.schoolStage),
@@ -125,6 +143,7 @@ export function buildMatrixCellDeepLink(
 ): string {
   return buildLinksPagePath({
     q: bookTitle,
+    platform: filters.platform || undefined,
     resourceYear: normalizeDeepLinkField(filters.resourceYear),
     semester: normalizeDeepLinkField(filters.semester),
     schoolStage: normalizeDeepLinkField(filters.schoolStage),

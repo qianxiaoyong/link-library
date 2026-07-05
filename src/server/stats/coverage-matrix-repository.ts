@@ -10,6 +10,11 @@ function buildCoverageMatrixWhereClause(filters: CoverageMatrixQuery): {
   const conditions = ["status = ?"];
   const params: unknown[] = ["normal"];
 
+  if (filters.platform) {
+    conditions.push("platform = ?");
+    params.push(filters.platform);
+  }
+
   if (filters.resourceYear) {
     conditions.push("resource_year = ?");
     params.push(filters.resourceYear);

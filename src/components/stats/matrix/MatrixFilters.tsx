@@ -1,7 +1,9 @@
 import type { CoverageMatrixFilterOptions } from "@/shared/api/coverage-matrix-client";
-import type { ResourceCategory } from "@/shared/types/resource-link";
+import { LINK_PLATFORM_LABELS } from "@/shared/constants/link-taxonomy";
+import type { LinkPlatform, ResourceCategory } from "@/shared/types/resource-link";
 
 export type MatrixFilterValues = {
+  platform: LinkPlatform | "";
   resourceYear: string;
   semester: string;
   schoolStage: string;
@@ -11,6 +13,7 @@ export type MatrixFilterValues = {
 };
 
 export const defaultMatrixFilterValues: MatrixFilterValues = {
+  platform: "",
   resourceYear: "",
   semester: "",
   schoolStage: "",
@@ -21,6 +24,9 @@ export const defaultMatrixFilterValues: MatrixFilterValues = {
 
 const controlClassName =
   "h-9 shrink-0 rounded border border-zinc-300 bg-white px-2 text-sm text-zinc-900 outline-none focus:border-blue-500";
+
+const FILTER_SELECT_WIDTH = "w-[136px]";
+const CATEGORY_SELECT_WIDTH = "w-[136px]";
 
 type MatrixFiltersProps = {
   values: MatrixFilterValues;
@@ -42,7 +48,6 @@ type FilterSelectProps = {
   label: string;
   value: string;
   options: string[];
-  widthClassName: string;
   onChange: (value: string) => void;
 };
 
@@ -51,7 +56,6 @@ function FilterSelect({
   label,
   value,
   options,
-  widthClassName,
   onChange,
 }: FilterSelectProps) {
   const mergedOptions = withSelectedOption(options, value);
@@ -59,7 +63,7 @@ function FilterSelect({
   return (
     <select
       id={id}
-      className={`${controlClassName} ${widthClassName}`}
+      className={`${controlClassName} ${FILTER_SELECT_WIDTH}`}
       title={label}
       value={value}
       onChange={(event) => onChange(event.target.value)}
@@ -91,12 +95,33 @@ export function MatrixFilters({
   return (
     <section className="shrink-0 rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2.5">
       <div className="flex min-h-[36px] items-center gap-2 overflow-x-auto">
+        <select
+          id="matrix-filter-platform"
+          className={`${controlClassName} ${FILTER_SELECT_WIDTH}`}
+          title="平台"
+          value={values.platform}
+          onChange={(event) =>
+            updateField(
+              "platform",
+              event.target.value as MatrixFilterValues["platform"],
+            )
+          }
+        >
+          <option value="">平台：全部</option>
+          {(Object.entries(LINK_PLATFORM_LABELS) as Array<[LinkPlatform, string]>).map(
+            ([value, label]) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ),
+          )}
+        </select>
+
         <FilterSelect
           id="matrix-filter-resource-year"
           label="资料年份"
           value={values.resourceYear}
           options={options.resourceYears}
-          widthClassName="w-[120px]"
           onChange={(value) => updateField("resourceYear", value)}
         />
 
@@ -105,7 +130,6 @@ export function MatrixFilters({
           label="学期"
           value={values.semester}
           options={options.semesters}
-          widthClassName="w-[100px]"
           onChange={(value) => updateField("semester", value)}
         />
 
@@ -114,7 +138,6 @@ export function MatrixFilters({
           label="学段"
           value={values.schoolStage}
           options={options.schoolStages}
-          widthClassName="w-[100px]"
           onChange={(value) => updateField("schoolStage", value)}
         />
 
@@ -123,7 +146,6 @@ export function MatrixFilters({
           label="科目"
           value={values.subject}
           options={options.subjects}
-          widthClassName="w-[110px]"
           onChange={(value) => updateField("subject", value)}
         />
 
@@ -132,13 +154,12 @@ export function MatrixFilters({
           label="教材版本"
           value={values.textbookEdition}
           options={options.textbookEditions}
-          widthClassName="w-[110px]"
           onChange={(value) => updateField("textbookEdition", value)}
         />
 
         <select
           id="matrix-filter-category"
-          className={`${controlClassName} w-[110px]`}
+          className={`${controlClassName} ${CATEGORY_SELECT_WIDTH}`}
           title="资料分类"
           value={values.resourceCategory}
           onChange={(event) =>
