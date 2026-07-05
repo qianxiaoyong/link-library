@@ -323,6 +323,30 @@ export function LinkLibraryPage() {
     }
   }
 
+  const handleDetailFieldUpdate = useCallback(
+    async (id: string, patch: UpdateResourceLinkInput) => {
+      try {
+        const updated = await updateLink(id, patch);
+
+        if (
+          appliedFilters.status === "normal" &&
+          updated.status === "invalid" &&
+          selectedItem?.id === id
+        ) {
+          setSelectedItem(null);
+        } else {
+          setSelectedItem((current) => (current?.id === id ? updated : current));
+        }
+
+        await refreshList(appliedFilters, offset, false);
+      } catch (error) {
+        showToast(getErrorMessage(error), "error");
+        throw error;
+      }
+    },
+    [appliedFilters, offset, refreshList, selectedItem?.id, showToast],
+  );
+
   async function handleCopyInfo(item: ResourceLink) {
     if (!item.sourceText?.trim()) {
       showToast("当前资料没有原始输入内容。", "warning");
@@ -567,6 +591,7 @@ export function LinkLibraryPage() {
               onDelete={requestDelete}
               onToggleFavorite={(item) => void handleToggleFavorite(item)}
               onToggleStatus={(item) => void handleToggleStatus(item)}
+              onUpdateField={handleDetailFieldUpdate}
               onShowToast={showToast}
             />
           </div>

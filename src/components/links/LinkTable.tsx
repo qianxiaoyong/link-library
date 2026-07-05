@@ -70,8 +70,8 @@ export function LinkTable({
           <th className={`${CELL_CLASS} w-9`}>序号</th>
           <th className={`${CELL_CLASS} w-[52px]`}>年份</th>
           <th className={`${CELL_CLASS} w-[28%]`}>标题</th>
-          <th className={`${CELL_CLASS} w-[44px]`}>科目</th>
-          <th className={`${CELL_CLASS} w-[44px]`}>年级</th>
+          <th className={`${CELL_CLASS} w-[72px]`}>科目</th>
+          <th className={`${CELL_CLASS} w-[72px]`}>年级</th>
           <th className={`${CELL_CLASS} w-[48px]`}>分类</th>
           <th className={`${CELL_CLASS} w-[56px]`}>平台</th>
           <th className={`${CELL_CLASS} w-[11%]`}>链接</th>
