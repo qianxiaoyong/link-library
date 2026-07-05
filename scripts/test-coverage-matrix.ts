@@ -228,6 +228,32 @@ function main(): void {
     assert.equal(result.rows[0]?.cells[result.columns[0]?.key ?? ""]?.gradeCoverage, "1,3-6");
   });
 
+  runTest("服务层：书名号包含筛选", () => {
+    const matched = getCoverageMatrix({
+      resourceYear: "2026",
+      semester: "上册",
+      subject: "数学",
+      textbookEdition: "北师",
+      resourceCategory: "practice",
+      bookTitle: "一本",
+    });
+
+    assert.equal(matched.rows.length, 1);
+    assert.equal(matched.rows[0]?.bookTitle, "一本预备");
+
+    const empty = getCoverageMatrix({
+      resourceYear: "2026",
+      semester: "上册",
+      subject: "数学",
+      textbookEdition: "北师",
+      resourceCategory: "practice",
+      bookTitle: "不存在",
+    });
+
+    assert.equal(empty.totalRecords, 0);
+    assert.equal(empty.rows.length, 0);
+  });
+
   cleanupTestData();
   closeLinkDatabase();
 

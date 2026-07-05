@@ -24,7 +24,7 @@ export function LibraryShell({
         <div className="flex h-14 items-center justify-between gap-4 px-4">
           <div className="min-w-0 shrink">
             <h1 className="truncate text-lg font-semibold text-zinc-900">
-              学习资料链接库
+              网盘链接库
             </h1>
             <LibraryWorkspaceSubtitle
               activeView={activeView}

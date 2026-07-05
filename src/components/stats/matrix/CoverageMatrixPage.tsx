@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   defaultMatrixFilterValues,
   MatrixFilters,
@@ -42,8 +42,10 @@ type NotePopoverState = {
 
 function filtersToParams(
   filters: MatrixFilterValues,
+  appliedBookTitle: string,
 ): Parameters<typeof fetchCoverageMatrix>[0] {
   return {
+    bookTitle: appliedBookTitle.trim() || undefined,
     platform: filters.platform || undefined,
     resourceYear: filters.resourceYear || undefined,
     semester: filters.semester || undefined,
@@ -54,11 +56,19 @@ function filtersToParams(
   };
 }
 
+function toSavedFilters(
+  filters: MatrixFilterValues,
+): Parameters<typeof saveCoverageMatrixFilters>[0] {
+  const { bookTitle: _bookTitle, ...saved } = filters;
+  return saved;
+}
+
 export function CoverageMatrixPage() {
   const { toast, showToast } = useStatsToast();
   const [filters, setFilters] = useState<MatrixFilterValues>(
     defaultMatrixFilterValues,
   );
+  const [appliedBookTitle, setAppliedBookTitle] = useState("");
   const [filtersInitialized, setFiltersInitialized] = useState(false);
   const skipNextPersistRef = useRef(false);
   const [data, setData] = useState<CoverageMatrixResponse | null>(null);
@@ -90,11 +100,13 @@ export function CoverageMatrixPage() {
   }, [showToast]);
 
   const loadMatrix = useCallback(
-    async (nextFilters: MatrixFilterValues) => {
+    async (nextFilters: MatrixFilterValues, nextAppliedBookTitle: string) => {
       setLoading(true);
 
       try {
-        const result = await fetchCoverageMatrix(filtersToParams(nextFilters));
+        const result = await fetchCoverageMatrix(
+          filtersToParams(nextFilters, nextAppliedBookTitle),
+        );
         setData(result);
       } catch (error) {
         showToast(getCoverageMatrixErrorMessage(error), "error");
@@ -108,7 +120,7 @@ export function CoverageMatrixPage() {
   const persistFilters = useCallback(
     async (nextFilters: MatrixFilterValues) => {
       try {
-        await saveCoverageMatrixFilters(nextFilters);
+        await saveCoverageMatrixFilters(toSavedFilters(nextFilters));
       } catch (error) {
         showToast(getCoverageMatrixErrorMessage(error), "error");
       }
@@ -116,12 +128,25 @@ export function CoverageMatrixPage() {
     [showToast],
   );
 
+  const dropdownFilters = useMemo(
+    () => toSavedFilters(filters),
+    [
+      filters.platform,
+      filters.resourceYear,
+      filters.semester,
+      filters.schoolStage,
+      filters.subject,
+      filters.textbookEdition,
+      filters.resourceCategory,
+    ],
+  );
+
   useEffect(() => {
     async function initializeFilters() {
       try {
         const saved = await fetchCoverageMatrixFilters();
         skipNextPersistRef.current = true;
-        setFilters(saved);
+        setFilters({ ...defaultMatrixFilterValues, ...saved });
       } catch (error) {
         showToast(getCoverageMatrixErrorMessage(error), "error");
       } finally {
@@ -137,7 +162,7 @@ export function CoverageMatrixPage() {
       return;
     }
 
-    void loadMatrix(filters);
+    void loadMatrix(filters, appliedBookTitle);
 
     if (skipNextPersistRef.current) {
       skipNextPersistRef.current = false;
@@ -145,7 +170,13 @@ export function CoverageMatrixPage() {
     }
 
     void persistFilters(filters);
-  }, [filters, filtersInitialized, loadMatrix, persistFilters]);
+  }, [
+    dropdownFilters,
+    appliedBookTitle,
+    filtersInitialized,
+    loadMatrix,
+    persistFilters,
+  ]);
 
   useEffect(() => {
     void loadFilterOptions();
@@ -160,17 +191,18 @@ export function CoverageMatrixPage() {
   }
 
   function handleSearch() {
-    void loadMatrix(filters);
+    setAppliedBookTitle(filters.bookTitle);
   }
 
   function handleReset() {
     setFilters(defaultMatrixFilterValues);
+    setAppliedBookTitle("");
   }
 
   function handleExportExcel() {
     setExporting(true);
     try {
-      downloadCoverageMatrixExcel(filtersToParams(filters));
+      downloadCoverageMatrixExcel(filtersToParams(filters, appliedBookTitle));
       showToast("已开始导出覆盖矩阵 Excel。", "success");
     } catch (error) {
       showToast(getCoverageMatrixErrorMessage(error), "error");

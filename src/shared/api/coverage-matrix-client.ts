@@ -3,6 +3,7 @@ import type { LinkPlatform, ResourceCategory } from "@/shared/types/resource-lin
 import type { CoverageMatrixResult } from "@/shared/stats/coverage-matrix";
 
 export type CoverageMatrixParams = {
+  bookTitle?: string;
   platform?: LinkPlatform;
   resourceYear?: string;
   semester?: string;
@@ -92,6 +93,9 @@ function buildCoverageMatrixQueryString(
 ): string {
   const searchParams = new URLSearchParams();
 
+  if (params.bookTitle?.trim()) {
+    searchParams.set("bookTitle", params.bookTitle.trim());
+  }
   if (params.platform) {
     searchParams.set("platform", params.platform);
   }

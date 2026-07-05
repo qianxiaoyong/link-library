@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "学习资料链接库",
+  title: "网盘链接库",
   description: "个人本地学习资料网盘链接管理",
 };
 

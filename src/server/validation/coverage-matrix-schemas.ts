@@ -2,6 +2,7 @@ import { z } from "zod";
 import { LINK_PLATFORMS, RESOURCE_CATEGORIES } from "@/shared/constants/link-taxonomy";
 
 export const coverageMatrixQuerySchema = z.object({
+  bookTitle: z.string().optional(),
   platform: z.enum(LINK_PLATFORMS).optional(),
   resourceYear: z.string().optional(),
   semester: z.string().optional(),

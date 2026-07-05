@@ -112,13 +112,16 @@ function stopServer() {
   serverProcess = null;
 }
 
+const WINDOW_WIDTH = 1550;
+const WINDOW_HEIGHT = 900;
+
 function createLoadingWindow() {
   mainWindow = new BrowserWindow({
-    width: 1360,
-    height: 900,
-    minWidth: 1024,
-    minHeight: 680,
-    title: "学习资料链接库",
+    width: WINDOW_WIDTH,
+    height: WINDOW_HEIGHT,
+    minWidth: WINDOW_WIDTH,
+    minHeight: WINDOW_HEIGHT,
+    title: "网盘链接库",
     autoHideMenuBar: true,
     show: true,
     webPreferences: {
@@ -131,7 +134,7 @@ function createLoadingWindow() {
   const loadingHtml = `
     <!doctype html>
     <html lang="zh-CN">
-      <head><meta charset="utf-8"><title>学习资料链接库</title></head>
+      <head><meta charset="utf-8"><title>网盘链接库</title></head>
       <body style="font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;color:#444;">
         正在启动本地服务，请稍候...
       </body>

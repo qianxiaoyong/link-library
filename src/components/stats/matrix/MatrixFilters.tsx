@@ -3,6 +3,7 @@ import { LINK_PLATFORM_LABELS } from "@/shared/constants/link-taxonomy";
 import type { LinkPlatform, ResourceCategory } from "@/shared/types/resource-link";
 
 export type MatrixFilterValues = {
+  bookTitle: string;
   platform: LinkPlatform | "";
   resourceYear: string;
   semester: string;
@@ -13,6 +14,7 @@ export type MatrixFilterValues = {
 };
 
 export const defaultMatrixFilterValues: MatrixFilterValues = {
+  bookTitle: "",
   platform: "",
   resourceYear: "",
   semester: "",
@@ -105,9 +107,25 @@ export function MatrixFilters({
     onChange({ ...values, [key]: value });
   }
 
+  function handleTextKeyDown(event: React.KeyboardEvent) {
+    if (event.key === "Enter") {
+      onSearch();
+    }
+  }
+
   return (
     <section className="shrink-0 rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2.5">
       <div className="flex min-h-[36px] items-center gap-2 overflow-x-auto">
+        <input
+          id="matrix-filter-book-title"
+          className={`${controlBaseClassName} w-[140px] text-zinc-900`}
+          placeholder="书名号"
+          title="书名号"
+          value={values.bookTitle}
+          onChange={(event) => updateField("bookTitle", event.target.value)}
+          onKeyDown={handleTextKeyDown}
+        />
+
         <select
           id="matrix-filter-platform"
           className={buildSelectClassName(PLATFORM_SELECT_WIDTH, !values.platform)}
