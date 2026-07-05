@@ -71,9 +71,9 @@ export function LinkTable({
           <th className={`${CELL_CLASS} w-[52px]`}>年份</th>
           <th className={`${CELL_CLASS} w-[24%]`}>标题</th>
           <th className={`${CELL_CLASS} w-[72px]`}>学段</th>
-          <th className={`${CELL_CLASS} w-[72px]`}>版本</th>
-          <th className={`${CELL_CLASS} w-[72px]`}>科目</th>
           <th className={`${CELL_CLASS} w-[72px]`}>年级</th>
+          <th className={`${CELL_CLASS} w-[72px]`}>科目</th>
+          <th className={`${CELL_CLASS} w-[72px]`}>版本</th>
           <th className={`${CELL_CLASS} w-[48px]`}>分类</th>
           <th className={`${CELL_CLASS} w-[56px]`}>平台</th>
           <th className={`${CELL_CLASS} w-[11%]`}>链接</th>
@@ -127,9 +127,9 @@ export function LinkTable({
               </td>
               <td
                 className={`${CELL_CLASS} text-zinc-700`}
-                title={item.textbookEdition ?? undefined}
+                title={item.grade ?? undefined}
               >
-                {displayValue(item.textbookEdition)}
+                {displayValue(item.grade)}
               </td>
               <td
                 className={`${CELL_CLASS} text-zinc-700`}
@@ -139,9 +139,9 @@ export function LinkTable({
               </td>
               <td
                 className={`${CELL_CLASS} text-zinc-700`}
-                title={item.grade ?? undefined}
+                title={item.textbookEdition ?? undefined}
               >
-                {displayValue(item.grade)}
+                {displayValue(item.textbookEdition)}
               </td>
               <td className={`${CELL_CLASS} text-zinc-700`}>
                 {getCategoryLabel(item.resourceCategory)}
