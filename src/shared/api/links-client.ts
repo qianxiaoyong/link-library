@@ -223,6 +223,43 @@ export async function updateLink(
   return data.item;
 }
 
+export type BatchUpdateFailure = {
+  id: string;
+  reason: string;
+};
+
+export type BatchUpdateLinksResult = {
+  successCount: number;
+  failureCount: number;
+  failures: BatchUpdateFailure[];
+};
+
+export async function batchUpdateLinks(
+  ids: string[],
+  patch: UpdateResourceLinkInput,
+): Promise<BatchUpdateLinksResult> {
+  const failures: BatchUpdateFailure[] = [];
+  let successCount = 0;
+
+  for (const id of ids) {
+    try {
+      await updateLink(id, patch);
+      successCount += 1;
+    } catch (error) {
+      failures.push({
+        id,
+        reason: getErrorMessage(error),
+      });
+    }
+  }
+
+  return {
+    successCount,
+    failureCount: failures.length,
+    failures,
+  };
+}
+
 export async function deleteLink(id: string): Promise<void> {
   await requestApi<{ deleted: boolean }>(`/api/links/${id}`, {
     method: "DELETE",

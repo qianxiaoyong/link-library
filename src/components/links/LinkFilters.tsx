@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import type { LinkPlatform, LinkStatus, ResourceCategory } from "@/shared/types/resource-link";
 
 export type LinkFilterValues = {
@@ -20,12 +21,13 @@ type LinkFiltersProps = {
   onChange: (values: LinkFilterValues) => void;
   onSearch: () => void;
   onReset: () => void;
+  onDropdownApply: (values: LinkFilterValues) => void;
 };
 
 const inputClassName =
-  "w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 outline-none focus:border-blue-500";
+  "h-8 w-full rounded border border-zinc-300 bg-white px-2 text-sm text-zinc-900 outline-none focus:border-blue-500";
 
-const labelClassName = "mb-1 block text-sm font-medium text-zinc-700";
+const labelClassName = "mb-0.5 block text-xs font-medium text-zinc-600";
 
 export const defaultLinkFilterValues: LinkFilterValues = {
   q: "",
@@ -37,43 +39,42 @@ export const defaultLinkFilterValues: LinkFilterValues = {
   resourceYear: "",
 };
 
+const DROPDOWN_KEYS = new Set([
+  "platform",
+  "status",
+  "resourceCategory",
+  "favorite",
+]);
+
 export function LinkFilters({
   values,
   onChange,
   onSearch,
   onReset,
+  onDropdownApply,
 }: LinkFiltersProps) {
+  const [moreOpen, setMoreOpen] = useState(false);
+
   function updateField<K extends keyof LinkFilterValues>(
     key: K,
     value: LinkFilterValues[K],
+    autoApply = false,
   ) {
-    onChange({ ...values, [key]: value });
+    const next = { ...values, [key]: value };
+    onChange(next);
+    if (autoApply || DROPDOWN_KEYS.has(key)) {
+      onDropdownApply(next);
+    }
+  }
+
+  function handleTextKeyDown(event: React.KeyboardEvent) {
+    if (event.key === "Enter") onSearch();
   }
 
   return (
-    <section className="rounded-lg border border-zinc-200 bg-zinc-50 p-4">
-      <div className="mb-3 flex items-center justify-between">
-        <h2 className="text-sm font-semibold text-zinc-800">筛选条件</h2>
-        <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={onReset}
-            className="rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-sm text-zinc-700 hover:bg-zinc-100"
-          >
-            重置
-          </button>
-          <button
-            type="button"
-            onClick={onSearch}
-            className="rounded-md bg-blue-600 px-3 py-1.5 text-sm text-white hover:bg-blue-700"
-          >
-            搜索
-          </button>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
-        <div className="md:col-span-2 xl:col-span-4">
+    <section className="shrink-0 rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2">
+      <div className="flex items-end gap-2">
+        <div className="min-w-0 flex-1">
           <label className={labelClassName} htmlFor="filter-q">
             搜索
           </label>
@@ -83,12 +84,26 @@ export function LinkFilters({
             placeholder="标题、备注、科目、年级、年份、链接..."
             value={values.q}
             onChange={(event) => updateField("q", event.target.value)}
-            onKeyDown={(event) => {
-              if (event.key === "Enter") onSearch();
-            }}
+            onKeyDown={handleTextKeyDown}
           />
         </div>
+        <button
+          type="button"
+          onClick={onReset}
+          className="h-8 shrink-0 rounded border border-zinc-300 bg-white px-3 text-sm text-zinc-700 hover:bg-zinc-100"
+        >
+          重置
+        </button>
+        <button
+          type="button"
+          onClick={onSearch}
+          className="h-8 shrink-0 rounded bg-blue-600 px-3 text-sm text-white hover:bg-blue-700"
+        >
+          搜索
+        </button>
+      </div>
 
+      <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-8">
         <div>
           <label className={labelClassName} htmlFor="filter-platform">
             平台
@@ -101,6 +116,7 @@ export function LinkFilters({
               updateField(
                 "platform",
                 (event.target.value || undefined) as LinkFilterValues["platform"],
+                true,
               )
             }
           >
@@ -119,35 +135,16 @@ export function LinkFilters({
             className={inputClassName}
             value={values.status}
             onChange={(event) =>
-              updateField("status", event.target.value as LinkFilterValues["status"])
+              updateField(
+                "status",
+                event.target.value as LinkFilterValues["status"],
+                true,
+              )
             }
           >
             <option value="normal">正常</option>
             <option value="invalid">已失效</option>
             <option value="all">全部</option>
-          </select>
-        </div>
-
-        <div>
-          <label className={labelClassName} htmlFor="filter-favorite">
-            收藏
-          </label>
-          <select
-            id="filter-favorite"
-            className={inputClassName}
-            value={
-              values.favorite === undefined ? "" : values.favorite ? "true" : "false"
-            }
-            onChange={(event) => {
-              const value = event.target.value;
-              updateField(
-                "favorite",
-                value === "" ? undefined : value === "true",
-              );
-            }}
-          >
-            <option value="">全部</option>
-            <option value="true">仅收藏</option>
           </select>
         </div>
 
@@ -164,6 +161,7 @@ export function LinkFilters({
                 "resourceCategory",
                 (event.target.value ||
                   undefined) as LinkFilterValues["resourceCategory"],
+                true,
               )
             }
           >
@@ -183,6 +181,7 @@ export function LinkFilters({
             className={inputClassName}
             value={values.schoolStage}
             onChange={(event) => updateField("schoolStage", event.target.value)}
+            onKeyDown={handleTextKeyDown}
           />
         </div>
 
@@ -195,18 +194,7 @@ export function LinkFilters({
             className={inputClassName}
             value={values.grade}
             onChange={(event) => updateField("grade", event.target.value)}
-          />
-        </div>
-
-        <div>
-          <label className={labelClassName} htmlFor="filter-semester">
-            学期
-          </label>
-          <input
-            id="filter-semester"
-            className={inputClassName}
-            value={values.semester}
-            onChange={(event) => updateField("semester", event.target.value)}
+            onKeyDown={handleTextKeyDown}
           />
         </div>
 
@@ -219,6 +207,7 @@ export function LinkFilters({
             className={inputClassName}
             value={values.subject}
             onChange={(event) => updateField("subject", event.target.value)}
+            onKeyDown={handleTextKeyDown}
           />
         </div>
 
@@ -231,9 +220,65 @@ export function LinkFilters({
             className={inputClassName}
             value={values.resourceYear}
             onChange={(event) => updateField("resourceYear", event.target.value)}
+            onKeyDown={handleTextKeyDown}
           />
         </div>
+
+        <div className="flex items-end">
+          <button
+            type="button"
+            onClick={() => setMoreOpen((open) => !open)}
+            className="h-8 w-full rounded border border-zinc-300 bg-white px-2 text-sm text-zinc-700 hover:bg-zinc-100"
+          >
+            {moreOpen ? "收起筛选" : "更多筛选"}
+          </button>
+        </div>
       </div>
+
+      {moreOpen ? (
+        <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-8">
+          <div>
+            <label className={labelClassName} htmlFor="filter-favorite">
+              收藏
+            </label>
+            <select
+              id="filter-favorite"
+              className={inputClassName}
+              value={
+                values.favorite === undefined
+                  ? ""
+                  : values.favorite
+                    ? "true"
+                    : "false"
+              }
+              onChange={(event) => {
+                const value = event.target.value;
+                updateField(
+                  "favorite",
+                  value === "" ? undefined : value === "true",
+                  true,
+                );
+              }}
+            >
+              <option value="">全部</option>
+              <option value="true">仅收藏</option>
+            </select>
+          </div>
+
+          <div>
+            <label className={labelClassName} htmlFor="filter-semester">
+              学期
+            </label>
+            <input
+              id="filter-semester"
+              className={inputClassName}
+              value={values.semester}
+              onChange={(event) => updateField("semester", event.target.value)}
+              onKeyDown={handleTextKeyDown}
+            />
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 }

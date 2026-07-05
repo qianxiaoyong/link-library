@@ -14,6 +14,7 @@
     "api:test": "tsx scripts/test-api-logic.ts",
     "ui:test": "tsx scripts/test-ui-manual.ts",
     "ui:import:test": "tsx scripts/test-ui-import-manual.ts",
+    "ui:batch-edit:test": "tsx scripts/test-ui-batch-edit-manual.ts",
     "export-backup:test": "tsx scripts/test-export-backup.ts"
   },
   "dependencies": {

@@ -3,13 +3,28 @@ import {
   LINK_STATUS_LABELS,
   RESOURCE_CATEGORY_LABELS,
 } from "@/shared/constants/link-taxonomy";
-import type { LinkStatus, ResourceCategory } from "@/shared/types/resource-link";
+import type { LinkStatus, ResourceCategory, ResourceLink } from "@/shared/types/resource-link";
 
 export function displayValue(value: string | null | undefined): string {
   if (value === null || value === undefined || value.trim() === "") {
     return "—";
   }
   return value;
+}
+
+export function formatResourceInfo(item: ResourceLink): string {
+  const parts = [
+    item.schoolStage?.trim(),
+    item.grade?.trim(),
+    item.semester?.trim(),
+    item.subject?.trim(),
+    item.resourceYear?.trim(),
+    item.resourceCategory
+      ? RESOURCE_CATEGORY_LABELS[item.resourceCategory]
+      : null,
+  ].filter((part): part is string => Boolean(part));
+
+  return parts.length > 0 ? parts.join(" / ") : "—";
 }
 
 export function formatDateTime(value: string | null | undefined): string {

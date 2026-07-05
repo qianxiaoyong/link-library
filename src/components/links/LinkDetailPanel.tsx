@@ -45,7 +45,7 @@ export function LinkDetailPanel({
 
   if (!item) {
     return (
-      <aside className="rounded-lg border border-dashed border-zinc-300 bg-white p-6 text-zinc-500">
+      <aside className="flex h-full items-center justify-center rounded-lg border border-dashed border-zinc-300 bg-white p-4 text-sm text-zinc-500">
         请选择一条资料查看详情
       </aside>
     );
@@ -59,9 +59,11 @@ export function LinkDetailPanel({
   }
 
   return (
-    <aside className="rounded-lg border border-zinc-200 bg-white p-4">
-      <div className="mb-4">
-        <h2 className="text-lg font-semibold text-zinc-900">{item.title}</h2>
+    <aside className="flex h-full min-h-0 flex-col overflow-hidden rounded-lg border border-zinc-200 bg-white">
+      <div className="shrink-0 border-b border-zinc-100 p-3">
+        <h2 className="line-clamp-2 text-base font-semibold text-zinc-900">
+          {item.title}
+        </h2>
         <div className="mt-2 flex flex-wrap gap-2">
           <LinkStatusBadge status={item.status} />
           {item.favorite ? (
@@ -70,106 +72,108 @@ export function LinkDetailPanel({
             </span>
           ) : null}
         </div>
-      </div>
 
-      {copyMessage ? (
-        <div className="mb-3 rounded-md bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
-          {copyMessage}
+        {copyMessage ? (
+          <div className="mt-2 rounded-md bg-emerald-50 px-3 py-1.5 text-xs text-emerald-700">
+            {copyMessage}
+          </div>
+        ) : null}
+
+        <div className="mt-3 flex flex-wrap gap-1.5">
+          <button
+            type="button"
+            className="rounded border border-zinc-300 px-2 py-1 text-xs hover:bg-zinc-50"
+            onClick={() => handleCopy("链接", item.url)}
+          >
+            复制链接
+          </button>
+          <button
+            type="button"
+            className="rounded border border-zinc-300 px-2 py-1 text-xs hover:bg-zinc-50"
+            onClick={() => handleCopy("提取码", item.accessCode)}
+            disabled={!item.accessCode}
+          >
+            复制提取码
+          </button>
+          <button
+            type="button"
+            className="rounded border border-zinc-300 px-2 py-1 text-xs hover:bg-zinc-50"
+            onClick={() => onEdit(item)}
+          >
+            编辑
+          </button>
+          <button
+            type="button"
+            className="rounded border border-red-300 px-2 py-1 text-xs text-red-700 hover:bg-red-50"
+            onClick={() => onDelete(item)}
+          >
+            删除
+          </button>
+          <button
+            type="button"
+            className="rounded border border-zinc-300 px-2 py-1 text-xs hover:bg-zinc-50"
+            onClick={() => onToggleFavorite(item)}
+          >
+            {item.favorite ? "取消收藏" : "收藏"}
+          </button>
+          <button
+            type="button"
+            className="rounded border border-zinc-300 px-2 py-1 text-xs hover:bg-zinc-50"
+            onClick={() => onToggleStatus(item)}
+          >
+            {item.status === "normal" ? "标记已失效" : "标记正常"}
+          </button>
         </div>
-      ) : null}
-
-      <div className="mb-4 flex flex-wrap gap-2">
-        <button
-          type="button"
-          className="rounded-md border border-zinc-300 px-3 py-1.5 text-sm hover:bg-zinc-50"
-          onClick={() => handleCopy("链接", item.url)}
-        >
-          复制链接
-        </button>
-        <button
-          type="button"
-          className="rounded-md border border-zinc-300 px-3 py-1.5 text-sm hover:bg-zinc-50"
-          onClick={() => handleCopy("提取码", item.accessCode)}
-          disabled={!item.accessCode}
-        >
-          复制提取码
-        </button>
-        <button
-          type="button"
-          className="rounded-md border border-zinc-300 px-3 py-1.5 text-sm hover:bg-zinc-50"
-          onClick={() => onEdit(item)}
-        >
-          编辑
-        </button>
-        <button
-          type="button"
-          className="rounded-md border border-red-300 px-3 py-1.5 text-sm text-red-700 hover:bg-red-50"
-          onClick={() => onDelete(item)}
-        >
-          删除
-        </button>
-        <button
-          type="button"
-          className="rounded-md border border-zinc-300 px-3 py-1.5 text-sm hover:bg-zinc-50"
-          onClick={() => onToggleFavorite(item)}
-        >
-          {item.favorite ? "取消收藏" : "收藏"}
-        </button>
-        <button
-          type="button"
-          className="rounded-md border border-zinc-300 px-3 py-1.5 text-sm hover:bg-zinc-50"
-          onClick={() => onToggleStatus(item)}
-        >
-          {item.status === "normal" ? "标记已失效" : "标记正常"}
-        </button>
       </div>
 
-      <DetailRow label="平台" value={getPlatformLabel(item.platform)} />
-      <DetailRow
-        label="原始链接"
-        value={
-          <a
-            href={item.rawUrl}
-            target="_blank"
-            rel="noreferrer noopener"
-            className="text-blue-600 hover:underline"
-          >
-            {item.rawUrl}
-          </a>
-        }
-      />
-      <DetailRow
-        label="标准链接"
-        value={
-          <a
-            href={item.url}
-            target="_blank"
-            rel="noreferrer noopener"
-            className="text-blue-600 hover:underline"
-          >
-            {item.url}
-          </a>
-        }
-      />
-      <DetailRow
-        label="提取码"
-        value={item.accessCode ? item.accessCode : "无"}
-      />
-      <DetailRow
-        label="资料分类"
-        value={getCategoryLabel(item.resourceCategory)}
-      />
-      <DetailRow label="备注" value={displayValue(item.description)} />
-      <DetailRow label="学段" value={displayValue(item.schoolStage)} />
-      <DetailRow label="年级" value={displayValue(item.grade)} />
-      <DetailRow label="学期" value={displayValue(item.semester)} />
-      <DetailRow label="科目" value={displayValue(item.subject)} />
-      <DetailRow label="资料年份" value={displayValue(item.resourceYear)} />
-      <DetailRow label="状态" value={<LinkStatusBadge status={item.status} />} />
-      <DetailRow label="是否收藏" value={item.favorite ? "是" : "否"} />
-      <DetailRow label="原始输入" value={displayValue(item.sourceText)} />
-      <DetailRow label="创建时间" value={formatDateTime(item.createdAt)} />
-      <DetailRow label="更新时间" value={formatDateTime(item.updatedAt)} />
+      <div className="min-h-0 flex-1 overflow-y-auto p-3">
+        <DetailRow label="平台" value={getPlatformLabel(item.platform)} />
+        <DetailRow
+          label="原始链接"
+          value={
+            <a
+              href={item.rawUrl}
+              target="_blank"
+              rel="noreferrer noopener"
+              className="text-blue-600 hover:underline"
+            >
+              {item.rawUrl}
+            </a>
+          }
+        />
+        <DetailRow
+          label="标准链接"
+          value={
+            <a
+              href={item.url}
+              target="_blank"
+              rel="noreferrer noopener"
+              className="text-blue-600 hover:underline"
+            >
+              {item.url}
+            </a>
+          }
+        />
+        <DetailRow
+          label="提取码"
+          value={item.accessCode ? item.accessCode : "无"}
+        />
+        <DetailRow
+          label="资料分类"
+          value={getCategoryLabel(item.resourceCategory)}
+        />
+        <DetailRow label="备注" value={displayValue(item.description)} />
+        <DetailRow label="学段" value={displayValue(item.schoolStage)} />
+        <DetailRow label="年级" value={displayValue(item.grade)} />
+        <DetailRow label="学期" value={displayValue(item.semester)} />
+        <DetailRow label="科目" value={displayValue(item.subject)} />
+        <DetailRow label="资料年份" value={displayValue(item.resourceYear)} />
+        <DetailRow label="状态" value={<LinkStatusBadge status={item.status} />} />
+        <DetailRow label="是否收藏" value={item.favorite ? "是" : "否"} />
+        <DetailRow label="原始输入" value={displayValue(item.sourceText)} />
+        <DetailRow label="创建时间" value={formatDateTime(item.createdAt)} />
+        <DetailRow label="更新时间" value={formatDateTime(item.updatedAt)} />
+      </div>
     </aside>
   );
 }

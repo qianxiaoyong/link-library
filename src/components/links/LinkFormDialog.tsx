@@ -43,9 +43,14 @@ type LinkFormDialogProps = {
 };
 
 const inputClassName =
-  "w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 outline-none focus:border-blue-500";
+  "w-full min-w-0 rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 outline-none focus:border-blue-500";
+
+const linkInputClassName = `${inputClassName} overflow-x-auto font-mono text-xs`;
 
 const labelClassName = "mb-1 block text-sm font-medium text-zinc-700";
+
+const sectionTitleClassName =
+  "border-b border-zinc-200 pb-2 text-sm font-semibold text-zinc-900";
 
 export const emptyLinkFormValues: LinkFormValues = {
   platform: "baidu",
@@ -89,6 +94,21 @@ function toNullable(value: string): string | null {
   return value.trim() === "" ? null : value.trim();
 }
 
+function FormSection({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="space-y-3">
+      <h3 className={sectionTitleClassName}>{title}</h3>
+      {children}
+    </section>
+  );
+}
+
 type LinkFormDialogContentProps = Omit<LinkFormDialogProps, "open">;
 
 function LinkFormDialogContent({
@@ -105,6 +125,7 @@ function LinkFormDialogContent({
       : emptyLinkFormValues,
   );
   const [validationError, setValidationError] = useState("");
+  const [sourceTextExpanded, setSourceTextExpanded] = useState(false);
 
   function updateField<K extends keyof LinkFormValues>(
     key: K,
@@ -173,8 +194,8 @@ function LinkFormDialogContent({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-lg bg-white p-6 shadow-xl">
-        <div className="mb-4 flex items-center justify-between">
+      <div className="flex max-h-[85vh] w-full max-w-[760px] flex-col overflow-hidden rounded-lg bg-white shadow-xl">
+        <div className="flex shrink-0 items-center justify-between border-b border-zinc-200 px-6 py-4">
           <h2 className="text-lg font-semibold text-zinc-900">
             {mode === "create" ? "新增资料" : "编辑资料"}
           </h2>
@@ -187,200 +208,268 @@ function LinkFormDialogContent({
           </button>
         </div>
 
-        <form className="space-y-4" onSubmit={handleSubmit}>
-          {mode === "create" ? (
-            <div>
-              <label className={labelClassName} htmlFor="form-platform">
-                平台
-              </label>
-              <select
-                id="form-platform"
-                className={inputClassName}
-                value={values.platform}
-                onChange={(event) =>
-                  updateField("platform", event.target.value as LinkPlatform)
-                }
-              >
-                <option value="baidu">百度网盘</option>
-                <option value="quark">夸克网盘</option>
-              </select>
-            </div>
-          ) : (
-            <div>
-              <label className={labelClassName}>平台</label>
-              <div className="rounded-md border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm text-zinc-700">
-                {values.platform === "baidu" ? "百度网盘" : "夸克网盘"}
-              </div>
-            </div>
-          )}
+        <form
+          className="flex min-h-0 flex-1 flex-col"
+          onSubmit={handleSubmit}
+        >
+          <div className="min-h-0 flex-1 space-y-6 overflow-y-auto px-6 py-4">
+            <FormSection title="基础信息">
+              {mode === "create" ? (
+                <div>
+                  <label className={labelClassName} htmlFor="form-platform">
+                    平台
+                  </label>
+                  <select
+                    id="form-platform"
+                    className={inputClassName}
+                    value={values.platform}
+                    onChange={(event) =>
+                      updateField(
+                        "platform",
+                        event.target.value as LinkPlatform,
+                      )
+                    }
+                  >
+                    <option value="baidu">百度网盘</option>
+                    <option value="quark">夸克网盘</option>
+                  </select>
+                </div>
+              ) : (
+                <div>
+                  <label className={labelClassName}>平台</label>
+                  <div className="rounded-md border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm text-zinc-700">
+                    {values.platform === "baidu" ? "百度网盘" : "夸克网盘"}
+                  </div>
+                </div>
+              )}
 
-          <div>
-            <label className={labelClassName} htmlFor="form-title">
-              标题
-            </label>
-            <input
-              id="form-title"
-              className={inputClassName}
-              value={values.title}
-              onChange={(event) => updateField("title", event.target.value)}
-            />
-          </div>
-
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <div>
-              <label className={labelClassName} htmlFor="form-raw-url">
-                原始链接
-              </label>
-              <input
-                id="form-raw-url"
-                className={inputClassName}
-                value={values.rawUrl}
-                onChange={(event) => updateField("rawUrl", event.target.value)}
-              />
-            </div>
-            <div>
-              <label className={labelClassName} htmlFor="form-url">
-                标准链接
-              </label>
-              <input
-                id="form-url"
-                className={inputClassName}
-                value={values.url}
-                onChange={(event) => updateField("url", event.target.value)}
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className={labelClassName} htmlFor="form-access-code">
-              提取码
-            </label>
-            <input
-              id="form-access-code"
-              className={inputClassName}
-              value={values.accessCode}
-              onChange={(event) => updateField("accessCode", event.target.value)}
-            />
-          </div>
-
-          <div>
-            <label className={labelClassName} htmlFor="form-category">
-              资料分类
-            </label>
-            <select
-              id="form-category"
-              className={inputClassName}
-              value={values.resourceCategory}
-              onChange={(event) =>
-                updateField(
-                  "resourceCategory",
-                  event.target.value as ResourceCategory | "",
-                )
-              }
-            >
-              <option value="">空</option>
-              <option value="practice">练习</option>
-              <option value="paper">试卷</option>
-              <option value="special">专项</option>
-            </select>
-          </div>
-
-          <div>
-            <label className={labelClassName} htmlFor="form-description">
-              备注
-            </label>
-            <textarea
-              id="form-description"
-              className={inputClassName}
-              rows={3}
-              value={values.description}
-              onChange={(event) => updateField("description", event.target.value)}
-            />
-          </div>
-
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            {(
-              [
-                ["form-school-stage", "学段", "schoolStage"],
-                ["form-grade", "年级", "grade"],
-                ["form-semester", "学期", "semester"],
-                ["form-subject", "科目", "subject"],
-                ["form-resource-year", "资料年份", "resourceYear"],
-              ] as const
-            ).map(([id, label, key]) => (
-              <div key={id}>
-                <label className={labelClassName} htmlFor={id}>
-                  {label}
+              <div>
+                <label className={labelClassName} htmlFor="form-title">
+                  标题
                 </label>
                 <input
-                  id={id}
+                  id="form-title"
                   className={inputClassName}
-                  value={values[key]}
-                  onChange={(event) => updateField(key, event.target.value)}
+                  value={values.title}
+                  onChange={(event) => updateField("title", event.target.value)}
                 />
               </div>
-            ))}
-          </div>
 
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <div>
-              <label className={labelClassName} htmlFor="form-status">
-                状态
-              </label>
-              <select
-                id="form-status"
-                className={inputClassName}
-                value={values.status}
-                onChange={(event) =>
-                  updateField("status", event.target.value as LinkStatus)
-                }
-              >
-                <option value="normal">正常</option>
-                <option value="invalid">已失效</option>
-              </select>
-            </div>
-            <div className="flex items-end">
-              <label className="flex items-center gap-2 text-sm text-zinc-700">
-                <input
-                  type="checkbox"
-                  checked={values.favorite}
+              <div>
+                <label className={labelClassName} htmlFor="form-category">
+                  资料分类
+                </label>
+                <select
+                  id="form-category"
+                  className={inputClassName}
+                  value={values.resourceCategory}
                   onChange={(event) =>
-                    updateField("favorite", event.target.checked)
+                    updateField(
+                      "resourceCategory",
+                      event.target.value as ResourceCategory | "",
+                    )
+                  }
+                >
+                  <option value="">空</option>
+                  <option value="practice">练习</option>
+                  <option value="paper">试卷</option>
+                  <option value="special">专项</option>
+                </select>
+              </div>
+            </FormSection>
+
+            <FormSection title="链接信息">
+              <div>
+                <label className={labelClassName} htmlFor="form-raw-url">
+                  原始链接
+                </label>
+                <input
+                  id="form-raw-url"
+                  className={linkInputClassName}
+                  value={values.rawUrl}
+                  onChange={(event) => updateField("rawUrl", event.target.value)}
+                />
+              </div>
+
+              <div>
+                <label className={labelClassName} htmlFor="form-url">
+                  标准链接
+                </label>
+                <input
+                  id="form-url"
+                  className={linkInputClassName}
+                  value={values.url}
+                  onChange={(event) => updateField("url", event.target.value)}
+                />
+              </div>
+
+              <div className="max-w-xs">
+                <label className={labelClassName} htmlFor="form-access-code">
+                  提取码
+                </label>
+                <input
+                  id="form-access-code"
+                  className={inputClassName}
+                  value={values.accessCode}
+                  onChange={(event) =>
+                    updateField("accessCode", event.target.value)
                   }
                 />
-                是否收藏
-              </label>
-            </div>
+              </div>
+            </FormSection>
+
+            <FormSection title="学习资料信息">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div>
+                  <label className={labelClassName} htmlFor="form-school-stage">
+                    学段
+                  </label>
+                  <input
+                    id="form-school-stage"
+                    className={inputClassName}
+                    value={values.schoolStage}
+                    onChange={(event) =>
+                      updateField("schoolStage", event.target.value)
+                    }
+                  />
+                </div>
+                <div>
+                  <label className={labelClassName} htmlFor="form-grade">
+                    年级
+                  </label>
+                  <input
+                    id="form-grade"
+                    className={inputClassName}
+                    value={values.grade}
+                    onChange={(event) => updateField("grade", event.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className={labelClassName} htmlFor="form-semester">
+                    学期
+                  </label>
+                  <input
+                    id="form-semester"
+                    className={inputClassName}
+                    value={values.semester}
+                    onChange={(event) =>
+                      updateField("semester", event.target.value)
+                    }
+                  />
+                </div>
+                <div>
+                  <label className={labelClassName} htmlFor="form-subject">
+                    科目
+                  </label>
+                  <input
+                    id="form-subject"
+                    className={inputClassName}
+                    value={values.subject}
+                    onChange={(event) =>
+                      updateField("subject", event.target.value)
+                    }
+                  />
+                </div>
+                <div>
+                  <label className={labelClassName} htmlFor="form-resource-year">
+                    资料年份
+                  </label>
+                  <input
+                    id="form-resource-year"
+                    className={inputClassName}
+                    value={values.resourceYear}
+                    onChange={(event) =>
+                      updateField("resourceYear", event.target.value)
+                    }
+                  />
+                </div>
+                <div>
+                  <label className={labelClassName} htmlFor="form-status">
+                    状态
+                  </label>
+                  <select
+                    id="form-status"
+                    className={inputClassName}
+                    value={values.status}
+                    onChange={(event) =>
+                      updateField("status", event.target.value as LinkStatus)
+                    }
+                  >
+                    <option value="normal">正常</option>
+                    <option value="invalid">已失效</option>
+                  </select>
+                </div>
+              </div>
+            </FormSection>
+
+            <FormSection title="状态信息">
+              <div>
+                <label className={labelClassName} htmlFor="form-favorite">
+                  是否收藏
+                </label>
+                <select
+                  id="form-favorite"
+                  className={`${inputClassName} max-w-xs`}
+                  value={values.favorite ? "true" : "false"}
+                  onChange={(event) =>
+                    updateField("favorite", event.target.value === "true")
+                  }
+                >
+                  <option value="false">否</option>
+                  <option value="true">是</option>
+                </select>
+              </div>
+            </FormSection>
+
+            <FormSection title="备注">
+              <textarea
+                id="form-description"
+                className={inputClassName}
+                rows={2}
+                value={values.description}
+                onChange={(event) =>
+                  updateField("description", event.target.value)
+                }
+              />
+            </FormSection>
+
+            {mode === "edit" ? (
+              <FormSection title="原始输入片段">
+                <button
+                  type="button"
+                  className="text-sm text-blue-600 hover:underline"
+                  onClick={() => setSourceTextExpanded((current) => !current)}
+                >
+                  {sourceTextExpanded ? "收起原始输入" : "展开原始输入"}
+                </button>
+                {sourceTextExpanded ? (
+                  <textarea
+                    id="form-source-text"
+                    className={inputClassName}
+                    rows={4}
+                    value={values.sourceText}
+                    onChange={(event) =>
+                      updateField("sourceText", event.target.value)
+                    }
+                  />
+                ) : null}
+              </FormSection>
+            ) : null}
+
+            {validationError ? (
+              <div className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
+                {validationError}
+              </div>
+            ) : null}
+
+            {errorMessage ? (
+              <div className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
+                {errorMessage}
+              </div>
+            ) : null}
           </div>
 
-          {mode === "edit" ? (
-            <div>
-              <label className={labelClassName} htmlFor="form-source-text">
-                原始输入片段
-              </label>
-              <textarea
-                id="form-source-text"
-                className={inputClassName}
-                rows={3}
-                value={values.sourceText}
-                onChange={(event) => updateField("sourceText", event.target.value)}
-              />
-            </div>
-          ) : null}
-
-          {validationError ? (
-            <div className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
-              {validationError}
-            </div>
-          ) : null}
-
-          {errorMessage ? (
-            <div className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
-              {errorMessage}
-            </div>
-          ) : null}
-
-          <div className="flex justify-end gap-2 pt-2">
+          <div className="flex shrink-0 justify-end gap-2 border-t border-zinc-200 px-6 py-4">
             <button
               type="button"
               className="rounded-md border border-zinc-300 px-4 py-2 text-sm hover:bg-zinc-50"
