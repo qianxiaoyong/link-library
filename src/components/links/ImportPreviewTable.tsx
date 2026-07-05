@@ -14,6 +14,12 @@ type ImportPreviewTableProps = {
 };
 
 const rowClassName = "h-11 whitespace-nowrap";
+const cellClassName =
+  "overflow-hidden text-ellipsis px-2 py-2 align-middle text-sm";
+const narrowCellClassName =
+  "overflow-hidden text-ellipsis px-1.5 py-2 align-middle text-sm";
+const headerClassName =
+  "overflow-hidden text-ellipsis whitespace-nowrap px-2 py-2 text-left text-xs font-medium text-zinc-700";
 
 export function ImportPreviewTable({
   items,
@@ -33,51 +39,46 @@ export function ImportPreviewTable({
       <table className="w-full table-fixed divide-y divide-zinc-200 text-sm">
         <thead className="sticky top-0 z-10 bg-zinc-50">
           <tr>
-            {["序号", "平台", "标题", "标准链接", "提取码", "警告", "操作"].map(
-              (header) => (
-                <th
-                  key={header}
-                  className="overflow-hidden text-ellipsis px-2 py-2 text-left text-xs font-medium text-zinc-700"
-                >
-                  {header}
-                </th>
-              ),
-            )}
+            <th className={`${headerClassName} w-11`}>序号</th>
+            <th className={`${headerClassName} w-16`}>平台</th>
+            <th className={headerClassName}>标题</th>
+            <th className={`${headerClassName} w-[20%]`}>标准链接</th>
+            <th className={`${headerClassName} w-14`}>提取码</th>
+            <th className={`${headerClassName} w-11`}>警告</th>
+            <th className={`${headerClassName} w-11`}>操作</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-zinc-100">
           {items.map((item, index) => (
             <tr key={item.key} className={rowClassName}>
-              <td className="overflow-hidden text-ellipsis px-2 text-zinc-600">
+              <td className={`${narrowCellClassName} text-zinc-600`}>
                 {index + 1}
               </td>
-              <td className="overflow-hidden text-ellipsis px-2">
-                {getPlatformLabel(item.platform)}
-              </td>
+              <td className={cellClassName}>{getPlatformLabel(item.platform)}</td>
               <td
-                className="overflow-hidden text-ellipsis px-2 font-medium text-zinc-900"
+                className={`${cellClassName} font-medium text-zinc-900`}
                 title={item.title}
               >
                 {item.title}
               </td>
               <td
-                className="overflow-hidden text-ellipsis px-2 text-blue-600"
+                className={`${cellClassName} text-blue-600`}
                 title={item.rawUrl !== item.url ? `${item.url}\n${item.rawUrl}` : item.url}
               >
                 {item.url}
               </td>
-              <td className="overflow-hidden text-ellipsis px-2">
+              <td className={narrowCellClassName}>
                 {displayValue(item.accessCode)}
               </td>
               <td
-                className="overflow-hidden text-ellipsis px-2 text-amber-700"
+                className={`${narrowCellClassName} text-amber-700`}
                 title={
                   item.warnings.length > 0 ? item.warnings.join("；") : undefined
                 }
               >
                 {item.warnings.length > 0 ? item.warnings.join("；") : "—"}
               </td>
-              <td className="overflow-hidden text-ellipsis px-2">
+              <td className={narrowCellClassName}>
                 <button
                   type="button"
                   className="text-xs text-red-600 hover:underline disabled:opacity-50"

@@ -1,10 +1,12 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   applyImportItems,
   getErrorMessage,
+  loadImportDefaultsConfig,
   parseImportText,
+  saveImportDefaultsConfig,
   type ApplyImportResponse,
 } from "@/shared/api/links-client";
 import type { ParseLinkTextResult } from "@/shared/parser/link-parser-types";
@@ -65,6 +67,12 @@ export function LinkImportDialog({
   const [parseError, setParseError] = useState("");
   const [applyError, setApplyError] = useState("");
 
+  const persistDefaults = useCallback((values: ImportDefaultsValues) => {
+    void saveImportDefaultsConfig(values).catch(() => {
+      // 静默失败，避免打断导入流程
+    });
+  }, []);
+
   const hasPreview = parseResult !== null;
   const hasParsedItems =
     parseResult !== null && parseResult.summary.totalItems > 0;
@@ -103,6 +111,9 @@ export function LinkImportDialog({
     setParsing(true);
 
     try {
+      const savedDefaults = await loadImportDefaultsConfig();
+      setDefaults(savedDefaults);
+
       const result = await parseImportText(text);
       setParseResult(result);
       setPreviewItems(toPreviewItems(result.items));
@@ -145,6 +156,7 @@ export function LinkImportDialog({
 
   function handleClose() {
     if (applying) return;
+    persistDefaults(defaults);
     resetImportState();
     onClose();
   }
@@ -264,6 +276,7 @@ export function LinkImportDialog({
                 <ImportDefaultsForm
                   values={defaults}
                   onChange={setDefaults}
+                  onPersist={persistDefaults}
                   disabled={applying || applyResult !== null}
                 />
               </div>

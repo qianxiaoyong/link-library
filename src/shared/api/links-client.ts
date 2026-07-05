@@ -53,6 +53,18 @@ export type ImportDefaultsInput = {
   favorite?: boolean;
 };
 
+export type ImportDefaultsConfig = {
+  resourceCategory: ResourceCategory | "";
+  description: string;
+  schoolStage: string;
+  grade: string;
+  semester: string;
+  subject: string;
+  resourceYear: string;
+  status: LinkStatus;
+  favorite: boolean;
+};
+
 export type ApplyImportResponse = {
   created: ResourceLink[];
   skippedDuplicates: Array<{
@@ -280,6 +292,19 @@ export async function applyImportItems(input: {
   return requestApi<ApplyImportResponse>("/api/import/apply", {
     method: "POST",
     body: JSON.stringify(input),
+  });
+}
+
+export async function loadImportDefaultsConfig(): Promise<ImportDefaultsConfig> {
+  return requestApi<ImportDefaultsConfig>("/api/import/defaults");
+}
+
+export async function saveImportDefaultsConfig(
+  config: ImportDefaultsConfig,
+): Promise<ImportDefaultsConfig> {
+  return requestApi<ImportDefaultsConfig>("/api/import/defaults", {
+    method: "PUT",
+    body: JSON.stringify(config),
   });
 }
 

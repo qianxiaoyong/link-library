@@ -81,6 +81,20 @@ export const importApplySchema = z.object({
   defaults: importApplyDefaultsSchema,
 });
 
+export const importDefaultsConfigSchema = z.object({
+  resourceCategory: z
+    .union([z.enum(RESOURCE_CATEGORIES), z.literal("")])
+    .default(""),
+  description: z.string().default(""),
+  schoolStage: z.string().default(""),
+  grade: z.string().default(""),
+  semester: z.string().default(""),
+  subject: z.string().default(""),
+  resourceYear: z.string().default(""),
+  status: linkStatusSchema.default("normal"),
+  favorite: z.boolean().default(false),
+});
+
 export const listResourceLinksQuerySchema = z.object({
   q: z.string().optional(),
   platform: z.enum(LINK_PLATFORMS).optional(),
@@ -104,6 +118,7 @@ export const listResourceLinksQuerySchema = z.object({
 export type CreateResourceLinkBody = z.infer<typeof createResourceLinkSchema>;
 export type UpdateResourceLinkBody = z.infer<typeof updateResourceLinkSchema>;
 export type ImportApplyBody = z.infer<typeof importApplySchema>;
+export type ImportDefaultsConfigBody = z.infer<typeof importDefaultsConfigSchema>;
 export type ListResourceLinksQuery = z.infer<typeof listResourceLinksQuerySchema>;
 
 export const exportExcelQuerySchema = z.object({

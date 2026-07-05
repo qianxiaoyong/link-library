@@ -17,6 +17,7 @@ export type ImportDefaultsValues = {
 type ImportDefaultsFormProps = {
   values: ImportDefaultsValues;
   onChange: (values: ImportDefaultsValues) => void;
+  onPersist?: (values: ImportDefaultsValues) => void;
   disabled?: boolean;
 };
 
@@ -83,13 +84,19 @@ function InlineField({
 export function ImportDefaultsForm({
   values,
   onChange,
+  onPersist,
   disabled = false,
 }: ImportDefaultsFormProps) {
   function updateField<K extends keyof ImportDefaultsValues>(
     key: K,
     value: ImportDefaultsValues[K],
+    persist = false,
   ) {
-    onChange({ ...values, [key]: value });
+    const next = { ...values, [key]: value };
+    onChange(next);
+    if (persist) {
+      onPersist?.(next);
+    }
   }
 
   return (
@@ -113,6 +120,12 @@ export function ImportDefaultsForm({
               onChange={(event) =>
                 updateField("resourceYear", event.target.value)
               }
+              onBlur={(event) =>
+                onPersist?.({
+                  ...values,
+                  resourceYear: event.currentTarget.value,
+                })
+              }
             />
           </InlineField>
           <InlineField id="import-category" label="资料分类">
@@ -125,6 +138,7 @@ export function ImportDefaultsForm({
                 updateField(
                   "resourceCategory",
                   event.target.value as ResourceCategory | "",
+                  true,
                 )
               }
             >
@@ -148,6 +162,12 @@ export function ImportDefaultsForm({
               onChange={(event) =>
                 updateField("schoolStage", event.target.value)
               }
+              onBlur={(event) =>
+                onPersist?.({
+                  ...values,
+                  schoolStage: event.currentTarget.value,
+                })
+              }
             />
           </InlineField>
           <InlineField id="import-subject" label="科目">
@@ -157,6 +177,12 @@ export function ImportDefaultsForm({
               disabled={disabled}
               value={values.subject}
               onChange={(event) => updateField("subject", event.target.value)}
+              onBlur={(event) =>
+                onPersist?.({
+                  ...values,
+                  subject: event.currentTarget.value,
+                })
+              }
             />
           </InlineField>
         </FormRow>
@@ -168,6 +194,12 @@ export function ImportDefaultsForm({
               disabled={disabled}
               value={values.grade}
               onChange={(event) => updateField("grade", event.target.value)}
+              onBlur={(event) =>
+                onPersist?.({
+                  ...values,
+                  grade: event.currentTarget.value,
+                })
+              }
             />
           </InlineField>
           <InlineField id="import-semester" label="学期">
@@ -177,6 +209,12 @@ export function ImportDefaultsForm({
               disabled={disabled}
               value={values.semester}
               onChange={(event) => updateField("semester", event.target.value)}
+              onBlur={(event) =>
+                onPersist?.({
+                  ...values,
+                  semester: event.currentTarget.value,
+                })
+              }
             />
           </InlineField>
         </FormRow>
@@ -192,6 +230,12 @@ export function ImportDefaultsForm({
             onChange={(event) =>
               updateField("description", event.target.value)
             }
+            onBlur={(event) =>
+              onPersist?.({
+                ...values,
+                description: event.currentTarget.value,
+              })
+            }
           />
         </InlineField>
         <FormRow>
@@ -206,7 +250,7 @@ export function ImportDefaultsForm({
               disabled={disabled}
               value={values.favorite ? "true" : "false"}
               onChange={(event) =>
-                updateField("favorite", event.target.value === "true")
+                updateField("favorite", event.target.value === "true", true)
               }
             >
               <option value="false">否</option>
@@ -220,7 +264,11 @@ export function ImportDefaultsForm({
               disabled={disabled}
               value={values.status}
               onChange={(event) =>
-                updateField("status", event.target.value as LinkStatus)
+                updateField(
+                  "status",
+                  event.target.value as LinkStatus,
+                  true,
+                )
               }
             >
               <option value="normal">正常</option>
