@@ -17,6 +17,7 @@ export function toCreateResourceLinkInput(
     semester: body.semester ?? null,
     subject: body.subject ?? null,
     resourceYear: body.resourceYear ?? null,
+    textbookEdition: body.textbookEdition ?? null,
     status: body.status ?? "normal",
     favorite: body.favorite ?? false,
     sourceText: body.sourceText ?? null,

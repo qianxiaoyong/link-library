@@ -18,6 +18,7 @@ export const defaultImportDefaultsConfig: ImportDefaultsConfigBody = {
   semester: "",
   subject: "",
   resourceYear: "",
+  textbookEdition: "",
   status: "normal",
   favorite: false,
 };

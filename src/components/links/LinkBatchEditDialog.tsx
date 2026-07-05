@@ -15,6 +15,7 @@ export type BatchEditFieldKey =
   | "semester"
   | "subject"
   | "resourceYear"
+  | "textbookEdition"
   | "status"
   | "favorite"
   | "description";
@@ -28,6 +29,7 @@ export type BatchEditFormState = {
   semester: string;
   subject: string;
   resourceYear: string;
+  textbookEdition: string;
   status: LinkStatus;
   favorite: boolean;
   description: string;
@@ -56,6 +58,7 @@ const defaultEnabled: Record<BatchEditFieldKey, boolean> = {
   semester: false,
   subject: false,
   resourceYear: false,
+  textbookEdition: false,
   status: false,
   favorite: false,
   description: false,
@@ -70,6 +73,7 @@ const defaultFormState: BatchEditFormState = {
   semester: "",
   subject: "",
   resourceYear: "",
+  textbookEdition: "",
   status: "normal",
   favorite: false,
   description: "",
@@ -104,6 +108,9 @@ export function buildBatchEditPatch(
   }
   if (form.enabled.resourceYear) {
     patch.resourceYear = toNullable(form.resourceYear);
+  }
+  if (form.enabled.textbookEdition) {
+    patch.textbookEdition = toNullable(form.textbookEdition);
   }
   if (form.enabled.status) {
     patch.status = form.status;
@@ -262,6 +269,7 @@ function LinkBatchEditDialogContent({
                   ["semester", "学期"],
                   ["subject", "科目"],
                   ["resourceYear", "资料年份"],
+                  ["textbookEdition", "教材版本"],
                 ] as const
               ).map(([key, label]) => (
                 <BatchFieldRow

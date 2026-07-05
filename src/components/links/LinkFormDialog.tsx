@@ -25,6 +25,7 @@ export type LinkFormValues = {
   semester: string;
   subject: string;
   resourceYear: string;
+  textbookEdition: string;
   status: LinkStatus;
   favorite: boolean;
   sourceText: string;
@@ -65,6 +66,7 @@ export const emptyLinkFormValues: LinkFormValues = {
   semester: "",
   subject: "",
   resourceYear: "",
+  textbookEdition: "",
   status: "normal",
   favorite: false,
   sourceText: "",
@@ -84,6 +86,7 @@ function toFormValues(item: ResourceLink): LinkFormValues {
     semester: item.semester ?? "",
     subject: item.subject ?? "",
     resourceYear: item.resourceYear ?? "",
+    textbookEdition: item.textbookEdition ?? "",
     status: item.status,
     favorite: item.favorite,
     sourceText: item.sourceText ?? "",
@@ -165,6 +168,7 @@ function LinkFormDialogContent({
         semester: toNullable(values.semester),
         subject: toNullable(values.subject),
         resourceYear: toNullable(values.resourceYear),
+        textbookEdition: toNullable(values.textbookEdition),
         status: values.status,
         favorite: values.favorite,
         sourceText: toNullable(values.sourceText),
@@ -185,6 +189,7 @@ function LinkFormDialogContent({
       semester: toNullable(values.semester),
       subject: toNullable(values.subject),
       resourceYear: toNullable(values.resourceYear),
+      textbookEdition: toNullable(values.textbookEdition),
       status: values.status,
       favorite: values.favorite,
       sourceText: toNullable(values.sourceText),
@@ -418,6 +423,19 @@ function LinkFormDialogContent({
                     value={values.resourceYear}
                     onChange={(event) =>
                       updateField("resourceYear", event.target.value)
+                    }
+                  />
+                </div>
+                <div>
+                  <label className={labelClassName} htmlFor="form-textbook-edition">
+                    教材版本
+                  </label>
+                  <input
+                    id="form-textbook-edition"
+                    className={`${inputClassName} w-[120px]`}
+                    value={values.textbookEdition}
+                    onChange={(event) =>
+                      updateField("textbookEdition", event.target.value)
                     }
                   />
                 </div>

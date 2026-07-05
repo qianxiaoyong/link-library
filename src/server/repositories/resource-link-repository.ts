@@ -31,6 +31,7 @@ export type ListResourceLinksFilters = {
   semester?: string;
   subject?: string;
   resourceYear?: string;
+  textbookEdition?: string;
   limit?: number;
   offset?: number;
 };
@@ -38,7 +39,7 @@ export type ListResourceLinksFilters = {
 const SELECT_COLUMNS = `
   id, platform, title, raw_url, url, access_code, resource_category,
   description, school_stage, grade, semester, subject, resource_year,
-  status, favorite, source_text, created_at, updated_at
+  textbook_edition, status, favorite, source_text, created_at, updated_at
 `;
 
 function isUniqueConstraintError(error: unknown): boolean {
@@ -101,6 +102,11 @@ function buildWhereClause(filters: ListResourceLinksFilters): {
     params.push(filters.resourceYear);
   }
 
+  if (filters.textbookEdition) {
+    conditions.push("textbook_edition = ?");
+    params.push(filters.textbookEdition);
+  }
+
   if (filters.q?.trim()) {
     const keyword = `%${filters.q.trim()}%`;
     conditions.push(`(
@@ -109,9 +115,10 @@ function buildWhereClause(filters: ListResourceLinksFilters): {
       subject LIKE ? OR
       grade LIKE ? OR
       resource_year LIKE ? OR
+      textbook_edition LIKE ? OR
       url LIKE ?
     )`);
-    params.push(keyword, keyword, keyword, keyword, keyword, keyword);
+    params.push(keyword, keyword, keyword, keyword, keyword, keyword, keyword);
   }
 
   return { conditions, params };
@@ -215,11 +222,11 @@ export function createResourceLink(
       `INSERT INTO resource_links (
         id, platform, title, raw_url, url, access_code, resource_category,
         description, school_stage, grade, semester, subject, resource_year,
-        status, favorite, source_text
+        textbook_edition, status, favorite, source_text
       ) VALUES (
         @id, @platform, @title, @raw_url, @url, @access_code, @resource_category,
         @description, @school_stage, @grade, @semester, @subject, @resource_year,
-        @status, @favorite, @source_text
+        @textbook_edition, @status, @favorite, @source_text
       )`,
     ).run(values);
   } catch (error) {
@@ -299,6 +306,10 @@ export function updateResourceLink(
   if (input.resourceYear !== undefined) {
     fields.push("resource_year = @resource_year");
     params.resource_year = input.resourceYear;
+  }
+  if (input.textbookEdition !== undefined) {
+    fields.push("textbook_edition = @textbook_edition");
+    params.textbook_edition = input.textbookEdition;
   }
   if (input.status !== undefined) {
     fields.push("status = @status");

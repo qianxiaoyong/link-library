@@ -20,6 +20,7 @@ export type ResourceLinkRow = {
   semester: string | null;
   subject: string | null;
   resource_year: string | null;
+  textbook_edition: string | null;
   status: string;
   favorite: number;
   source_text: string | null;
@@ -42,6 +43,7 @@ export function mapRowToResourceLink(row: ResourceLinkRow): ResourceLink {
     semester: row.semester,
     subject: row.subject,
     resourceYear: row.resource_year,
+    textbookEdition: row.textbook_edition,
     status: row.status as LinkStatus,
     favorite: row.favorite === 1,
     sourceText: row.source_text,
@@ -68,6 +70,7 @@ export function mapCreateInputToInsertValues(
     semester: input.semester ?? null,
     subject: input.subject ?? null,
     resource_year: input.resourceYear ?? null,
+    textbook_edition: input.textbookEdition ?? null,
     status: input.status ?? "normal",
     favorite: input.favorite ? 1 : 0,
     source_text: input.sourceText ?? null,

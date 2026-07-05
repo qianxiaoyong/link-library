@@ -67,9 +67,10 @@ export function LinkTable({
               onChange={(event) => onToggleAll(event.target.checked)}
             />
           </th>
-          <th className={`${CELL_CLASS} w-9`}>序号</th>
+          <th className={`${CELL_CLASS} w-11 whitespace-nowrap`}>序号</th>
           <th className={`${CELL_CLASS} w-[52px]`}>年份</th>
-          <th className={`${CELL_CLASS} w-[28%]`}>标题</th>
+          <th className={`${CELL_CLASS} w-[26%]`}>标题</th>
+          <th className={`${CELL_CLASS} w-[72px]`}>版本</th>
           <th className={`${CELL_CLASS} w-[72px]`}>科目</th>
           <th className={`${CELL_CLASS} w-[72px]`}>年级</th>
           <th className={`${CELL_CLASS} w-[48px]`}>分类</th>
@@ -116,6 +117,12 @@ export function LinkTable({
                 title={item.title}
               >
                 {item.title}
+              </td>
+              <td
+                className={`${CELL_CLASS} text-zinc-700`}
+                title={item.textbookEdition ?? undefined}
+              >
+                {displayValue(item.textbookEdition)}
               </td>
               <td
                 className={`${CELL_CLASS} text-zinc-700`}

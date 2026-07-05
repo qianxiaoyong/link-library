@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type {
-  LinkStatus,
   ResourceCategory,
   ResourceLink,
   UpdateResourceLinkInput,
@@ -30,19 +29,55 @@ type LinkDetailPanelProps = {
 };
 
 const inputClassName =
-  "w-full min-w-0 rounded border border-zinc-300 bg-white px-2 py-1 text-sm text-zinc-900 outline-none focus:border-blue-500 disabled:bg-zinc-50";
+  "h-8 w-full min-w-0 rounded border border-zinc-300 bg-white px-2 py-1 text-sm text-zinc-900 outline-none focus:border-blue-500 disabled:bg-zinc-50";
+
+const textareaClassName =
+  "w-full min-w-0 resize-y rounded border border-zinc-300 bg-white px-2 py-1 text-sm text-zinc-900 outline-none focus:border-blue-500 disabled:bg-zinc-50";
 
 const titleInputClassName =
   "w-full min-w-0 rounded border border-transparent bg-transparent px-0 py-0 text-base font-semibold text-zinc-900 outline-none hover:border-zinc-300 focus:border-blue-500 focus:bg-white focus:px-2 focus:py-1 disabled:bg-zinc-50";
-
-const rowClassName =
-  "grid grid-cols-[88px_1fr] gap-2 border-b border-zinc-100 py-2 text-sm";
 
 function toNullable(value: string): string | null {
   return value.trim() === "" ? null : value.trim();
 }
 
-function DetailReadonlyRow({
+function DetailSection({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="border-b border-zinc-100 py-3 last:border-b-0">
+      <h3 className="mb-2 text-xs font-medium text-zinc-700">【{title}】</h3>
+      {children}
+    </section>
+  );
+}
+
+function DetailGridField({
+  label,
+  htmlFor,
+  className = "",
+  children,
+}: {
+  label: string;
+  htmlFor?: string;
+  className?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className={`min-w-0 ${className}`}>
+      <label className="mb-0.5 block text-xs text-zinc-600" htmlFor={htmlFor}>
+        {label}
+      </label>
+      {children}
+    </div>
+  );
+}
+
+function DetailReadonlyLine({
   label,
   value,
 }: {
@@ -50,28 +85,28 @@ function DetailReadonlyRow({
   value: React.ReactNode;
 }) {
   return (
-    <div className={rowClassName}>
-      <div className="font-medium text-zinc-600">{label}</div>
-      <div className="break-all text-zinc-900">{value}</div>
+    <div className="flex min-w-0 items-baseline gap-2 text-sm">
+      <span className="w-14 shrink-0 text-xs text-zinc-600">{label}</span>
+      <span className="min-w-0 flex-1 break-all text-zinc-900">{value}</span>
     </div>
   );
 }
 
-function DetailEditableRow({
-  label,
+function DetailEditableInput({
+  id,
   value,
   onSave,
   disabled = false,
-  multiline = false,
   required = false,
+  requiredLabel,
   onShowToast,
 }: {
-  label: string;
+  id?: string;
   value: string | null;
   onSave: (nextValue: string) => Promise<void>;
   disabled?: boolean;
-  multiline?: boolean;
   required?: boolean;
+  requiredLabel?: string;
   onShowToast: (message: string, variant?: PageToastVariant) => void;
 }) {
   const [draft, setDraft] = useState(value ?? "");
@@ -83,12 +118,11 @@ function DetailEditableRow({
   async function commitDraft() {
     const trimmed = draft.trim();
     const current = (value ?? "").trim();
-
     if (trimmed === current) return;
 
     if (required && trimmed === "") {
       setDraft(value ?? "");
-      onShowToast(`${label}不能为空`, "warning");
+      onShowToast(`${requiredLabel ?? "字段"}不能为空`, "warning");
       return;
     }
 
@@ -100,40 +134,69 @@ function DetailEditableRow({
   }
 
   return (
-    <div className={rowClassName}>
-      <label className="font-medium text-zinc-600">{label}</label>
-      <div>
-        {multiline ? (
-          <textarea
-            className={`${inputClassName} min-h-[56px] resize-y`}
-            value={draft}
-            disabled={disabled}
-            rows={2}
-            onChange={(event) => setDraft(event.target.value)}
-            onBlur={() => void commitDraft()}
-          />
-        ) : (
-          <input
-            className={inputClassName}
-            value={draft}
-            disabled={disabled}
-            onChange={(event) => setDraft(event.target.value)}
-            onBlur={() => void commitDraft()}
-          />
-        )}
-      </div>
-    </div>
+    <input
+      id={id}
+      className={inputClassName}
+      value={draft}
+      disabled={disabled}
+      onChange={(event) => setDraft(event.target.value)}
+      onBlur={() => void commitDraft()}
+    />
   );
 }
 
-function DetailSelectRow<T extends string>({
-  label,
+function DetailEditableTextarea({
+  id,
+  value,
+  onSave,
+  disabled = false,
+  onShowToast,
+}: {
+  id?: string;
+  value: string | null;
+  onSave: (nextValue: string) => Promise<void>;
+  disabled?: boolean;
+  onShowToast: (message: string, variant?: PageToastVariant) => void;
+}) {
+  const [draft, setDraft] = useState(value ?? "");
+
+  useEffect(() => {
+    setDraft(value ?? "");
+  }, [value]);
+
+  async function commitDraft() {
+    const trimmed = draft.trim();
+    const current = (value ?? "").trim();
+    if (trimmed === current) return;
+
+    try {
+      await onSave(trimmed);
+    } catch {
+      setDraft(value ?? "");
+    }
+  }
+
+  return (
+    <textarea
+      id={id}
+      className={`${textareaClassName} min-h-[56px]`}
+      rows={2}
+      value={draft}
+      disabled={disabled}
+      onChange={(event) => setDraft(event.target.value)}
+      onBlur={() => void commitDraft()}
+    />
+  );
+}
+
+function DetailSelectInput<T extends string>({
+  id,
   value,
   options,
   onSave,
   disabled = false,
 }: {
-  label: string;
+  id?: string;
   value: T;
   options: Array<{ value: T; label: string }>;
   onSave: (nextValue: T) => Promise<void>;
@@ -141,29 +204,101 @@ function DetailSelectRow<T extends string>({
 }) {
   async function handleChange(nextValue: T) {
     if (nextValue === value) return;
-
     try {
       await onSave(nextValue);
     } catch {
-      // 父组件已提示错误，select 会随 item 回滚
+      // 父组件已提示错误
     }
   }
 
   return (
-    <div className={rowClassName}>
-      <label className="font-medium text-zinc-600">{label}</label>
-      <select
-        className={inputClassName}
-        value={value}
-        disabled={disabled}
-        onChange={(event) => void handleChange(event.target.value as T)}
+    <select
+      id={id}
+      className={inputClassName}
+      value={value}
+      disabled={disabled}
+      onChange={(event) => void handleChange(event.target.value as T)}
+    >
+      {options.map((option) => (
+        <option key={option.value} value={option.value}>
+          {option.label}
+        </option>
+      ))}
+    </select>
+  );
+}
+
+function DetailMoreMenu({
+  item,
+  onEdit,
+  onToggleFavorite,
+  onToggleStatus,
+}: {
+  item: ResourceLink;
+  onEdit: (item: ResourceLink) => void;
+  onToggleFavorite: (item: ResourceLink) => void;
+  onToggleStatus: (item: ResourceLink) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+
+    function handleClickOutside(event: MouseEvent) {
+      if (!menuRef.current?.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [open]);
+
+  return (
+    <div className="relative" ref={menuRef}>
+      <button
+        type="button"
+        className="rounded border border-zinc-300 px-2 py-1 text-xs text-zinc-700 hover:bg-zinc-50"
+        aria-label="更多操作"
+        onClick={() => setOpen((current) => !current)}
       >
-        {options.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
-        ))}
-      </select>
+        ⋮ 更多
+      </button>
+      {open ? (
+        <div className="absolute right-0 top-full z-20 mt-1 min-w-[128px] rounded-md border border-zinc-200 bg-white py-1 shadow-lg">
+          <button
+            type="button"
+            className="block w-full px-3 py-1.5 text-left text-xs text-zinc-800 hover:bg-zinc-50"
+            onClick={() => {
+              setOpen(false);
+              onEdit(item);
+            }}
+          >
+            完整编辑
+          </button>
+          <button
+            type="button"
+            className="block w-full px-3 py-1.5 text-left text-xs text-zinc-800 hover:bg-zinc-50"
+            onClick={() => {
+              setOpen(false);
+              onToggleFavorite(item);
+            }}
+          >
+            {item.favorite ? "取消收藏" : "收藏"}
+          </button>
+          <button
+            type="button"
+            className="block w-full px-3 py-1.5 text-left text-xs text-zinc-800 hover:bg-zinc-50"
+            onClick={() => {
+              setOpen(false);
+              onToggleStatus(item);
+            }}
+          >
+            {item.status === "normal" ? "标记已失效" : "标记正常"}
+          </button>
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -182,11 +317,13 @@ function LinkDetailPanelContent({
   onShowToast,
 }: LinkDetailPanelContentProps) {
   const [titleDraft, setTitleDraft] = useState(item.title);
+  const [sourceTextExpanded, setSourceTextExpanded] = useState(false);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     setTitleDraft(item.title);
-  }, [item.title]);
+    setSourceTextExpanded(false);
+  }, [item.id, item.title]);
 
   async function savePatch(patch: UpdateResourceLinkInput) {
     setSaving(true);
@@ -197,15 +334,24 @@ function LinkDetailPanelContent({
     }
   }
 
-  async function handleCopyInfo(current: ResourceLink) {
-    if (!current.sourceText?.trim()) {
+  async function handleCopySourceText() {
+    if (!item.sourceText?.trim()) {
       onShowToast("当前资料没有原始输入内容。", "warning");
       return;
     }
 
     try {
-      await copyToClipboard(current.sourceText);
+      await copyToClipboard(item.sourceText);
       onShowToast("已复制原始输入内容。", "success");
+    } catch {
+      onShowToast("复制失败，请稍后重试。", "error");
+    }
+  }
+
+  async function handleCopyRawUrl() {
+    try {
+      await copyToClipboard(item.rawUrl);
+      onShowToast("已复制原始链接。", "success");
     } catch {
       onShowToast("复制失败，请稍后重试。", "error");
     }
@@ -247,164 +393,195 @@ function LinkDetailPanelContent({
           ) : null}
         </div>
 
-        <div className="mt-3 flex flex-wrap gap-1.5">
-          <button
-            type="button"
-            className="rounded border border-zinc-300 px-2 py-1 text-xs hover:bg-zinc-50"
-            onClick={() => void handleCopyInfo(item)}
-          >
-            复制信息
-          </button>
-          <button
-            type="button"
-            className="rounded border border-zinc-300 px-2 py-1 text-xs hover:bg-zinc-50"
-            onClick={() => onEdit(item)}
-          >
-            编辑
-          </button>
-          <button
-            type="button"
-            className="rounded border border-red-300 px-2 py-1 text-xs text-red-700 hover:bg-red-50"
-            onClick={() => onDelete(item)}
-          >
-            删除
-          </button>
-          <button
-            type="button"
-            className="rounded border border-zinc-300 px-2 py-1 text-xs hover:bg-zinc-50"
-            onClick={() => onToggleFavorite(item)}
-          >
-            {item.favorite ? "取消收藏" : "收藏"}
-          </button>
-          <button
-            type="button"
-            className="rounded border border-zinc-300 px-2 py-1 text-xs hover:bg-zinc-50"
-            onClick={() => onToggleStatus(item)}
-          >
-            {item.status === "normal" ? "标记已失效" : "标记正常"}
-          </button>
+        <div className="mt-3 flex items-center justify-between gap-2">
+          <div className="flex flex-wrap gap-1.5">
+            <button
+              type="button"
+              className="rounded border border-zinc-300 px-2 py-1 text-xs hover:bg-zinc-50"
+              onClick={() => void handleCopySourceText()}
+            >
+              复制
+            </button>
+            <button
+              type="button"
+              className="rounded border border-red-300 px-2 py-1 text-xs text-red-700 hover:bg-red-50"
+              onClick={() => onDelete(item)}
+            >
+              删除
+            </button>
+          </div>
+          <DetailMoreMenu
+            item={item}
+            onEdit={onEdit}
+            onToggleFavorite={onToggleFavorite}
+            onToggleStatus={onToggleStatus}
+          />
         </div>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto p-3">
-        <DetailReadonlyRow label="平台" value={getPlatformLabel(item.platform)} />
-        <DetailReadonlyRow
-          label="原始链接"
-          value={
-            <a
-              href={item.rawUrl}
-              target="_blank"
-              rel="noreferrer noopener"
-              className="text-blue-600 hover:underline"
+      <div className="min-h-0 flex-1 overflow-y-auto px-3">
+        <DetailSection title="链接信息">
+          <div className="space-y-2">
+            <DetailReadonlyLine
+              label="平台"
+              value={getPlatformLabel(item.platform)}
+            />
+            <DetailReadonlyLine
+              label="提取码"
+              value={item.accessCode ? item.accessCode : "无"}
+            />
+            <div className="min-w-0">
+              <div className="mb-0.5 flex items-center justify-between gap-2">
+                <span className="text-xs text-zinc-600">原始链接</span>
+                <button
+                  type="button"
+                  className="shrink-0 text-xs text-blue-600 hover:underline"
+                  onClick={() => void handleCopyRawUrl()}
+                >
+                  复制
+                </button>
+              </div>
+              <a
+                href={item.rawUrl}
+                target="_blank"
+                rel="noreferrer noopener"
+                className="block truncate text-sm text-blue-600 hover:underline"
+                title={item.rawUrl}
+              >
+                {item.rawUrl}
+              </a>
+            </div>
+          </div>
+        </DetailSection>
+
+        <DetailSection title="基础">
+          <div className="grid grid-cols-2 gap-x-2 gap-y-2">
+            <DetailGridField label="资料分类" htmlFor="detail-category">
+              <DetailSelectInput
+                id="detail-category"
+                value={item.resourceCategory ?? ""}
+                disabled={saving}
+                options={[
+                  { value: "", label: "空" },
+                  { value: "practice", label: "练习" },
+                  { value: "paper", label: "试卷" },
+                  { value: "special", label: "专项" },
+                ]}
+                onSave={async (nextValue) => {
+                  await savePatch({
+                    resourceCategory: (nextValue || null) as ResourceCategory | null,
+                  });
+                }}
+              />
+            </DetailGridField>
+            <DetailGridField
+              label="备注"
+              htmlFor="detail-description"
+              className="col-span-2"
             >
-              {item.rawUrl}
-            </a>
-          }
-        />
-        <DetailReadonlyRow
-          label="提取码"
-          value={item.accessCode ? item.accessCode : "无"}
-        />
+              <DetailEditableTextarea
+                id="detail-description"
+                value={item.description}
+                disabled={saving}
+                onShowToast={onShowToast}
+                onSave={async (nextValue) => {
+                  await savePatch({ description: toNullable(nextValue) });
+                }}
+              />
+            </DetailGridField>
+          </div>
+        </DetailSection>
 
-        <DetailSelectRow
-          label="资料分类"
-          value={item.resourceCategory ?? ""}
-          disabled={saving}
-          options={[
-            { value: "", label: "空" },
-            { value: "practice", label: "练习" },
-            { value: "paper", label: "试卷" },
-            { value: "special", label: "专项" },
-          ]}
-          onSave={async (nextValue) => {
-            await savePatch({
-              resourceCategory: (nextValue || null) as ResourceCategory | null,
-            });
-          }}
-        />
-        <DetailEditableRow
-          label="备注"
-          value={item.description}
-          disabled={saving}
-          multiline
-          onShowToast={onShowToast}
-          onSave={async (nextValue) => {
-            await savePatch({ description: toNullable(nextValue) });
-          }}
-        />
-        <DetailEditableRow
-          label="学段"
-          value={item.schoolStage}
-          disabled={saving}
-          onShowToast={onShowToast}
-          onSave={async (nextValue) => {
-            await savePatch({ schoolStage: toNullable(nextValue) });
-          }}
-        />
-        <DetailEditableRow
-          label="年级"
-          value={item.grade}
-          disabled={saving}
-          onShowToast={onShowToast}
-          onSave={async (nextValue) => {
-            await savePatch({ grade: toNullable(nextValue) });
-          }}
-        />
-        <DetailEditableRow
-          label="学期"
-          value={item.semester}
-          disabled={saving}
-          onShowToast={onShowToast}
-          onSave={async (nextValue) => {
-            await savePatch({ semester: toNullable(nextValue) });
-          }}
-        />
-        <DetailEditableRow
-          label="科目"
-          value={item.subject}
-          disabled={saving}
-          onShowToast={onShowToast}
-          onSave={async (nextValue) => {
-            await savePatch({ subject: toNullable(nextValue) });
-          }}
-        />
-        <DetailEditableRow
-          label="资料年份"
-          value={item.resourceYear}
-          disabled={saving}
-          onShowToast={onShowToast}
-          onSave={async (nextValue) => {
-            await savePatch({ resourceYear: toNullable(nextValue) });
-          }}
-        />
-        <DetailSelectRow
-          label="状态"
-          value={item.status}
-          disabled={saving}
-          options={[
-            { value: "normal", label: "正常" },
-            { value: "invalid", label: "已失效" },
-          ]}
-          onSave={async (nextValue) => {
-            await savePatch({ status: nextValue as LinkStatus });
-          }}
-        />
-        <DetailSelectRow
-          label="是否收藏"
-          value={item.favorite ? "true" : "false"}
-          disabled={saving}
-          options={[
-            { value: "false", label: "否" },
-            { value: "true", label: "是" },
-          ]}
-          onSave={async (nextValue) => {
-            await savePatch({ favorite: nextValue === "true" });
-          }}
-        />
+        <DetailSection title="学段信息">
+          <div className="grid grid-cols-2 gap-x-2 gap-y-2">
+            <DetailGridField label="学段" htmlFor="detail-school-stage">
+              <DetailEditableInput
+                id="detail-school-stage"
+                value={item.schoolStage}
+                disabled={saving}
+                onShowToast={onShowToast}
+                onSave={async (nextValue) => {
+                  await savePatch({ schoolStage: toNullable(nextValue) });
+                }}
+              />
+            </DetailGridField>
+            <DetailGridField label="年级" htmlFor="detail-grade">
+              <DetailEditableInput
+                id="detail-grade"
+                value={item.grade}
+                disabled={saving}
+                onShowToast={onShowToast}
+                onSave={async (nextValue) => {
+                  await savePatch({ grade: toNullable(nextValue) });
+                }}
+              />
+            </DetailGridField>
+            <DetailGridField label="学期" htmlFor="detail-semester">
+              <DetailEditableInput
+                id="detail-semester"
+                value={item.semester}
+                disabled={saving}
+                onShowToast={onShowToast}
+                onSave={async (nextValue) => {
+                  await savePatch({ semester: toNullable(nextValue) });
+                }}
+              />
+            </DetailGridField>
+            <DetailGridField label="科目" htmlFor="detail-subject">
+              <DetailEditableInput
+                id="detail-subject"
+                value={item.subject}
+                disabled={saving}
+                onShowToast={onShowToast}
+                onSave={async (nextValue) => {
+                  await savePatch({ subject: toNullable(nextValue) });
+                }}
+              />
+            </DetailGridField>
+            <DetailGridField label="资料年份" htmlFor="detail-resource-year">
+              <DetailEditableInput
+                id="detail-resource-year"
+                value={item.resourceYear}
+                disabled={saving}
+                onShowToast={onShowToast}
+                onSave={async (nextValue) => {
+                  await savePatch({ resourceYear: toNullable(nextValue) });
+                }}
+              />
+            </DetailGridField>
+            <DetailGridField label="教材版本" htmlFor="detail-textbook-edition">
+              <DetailEditableInput
+                id="detail-textbook-edition"
+                value={item.textbookEdition}
+                disabled={saving}
+                onShowToast={onShowToast}
+                onSave={async (nextValue) => {
+                  await savePatch({ textbookEdition: toNullable(nextValue) });
+                }}
+              />
+            </DetailGridField>
+          </div>
+        </DetailSection>
 
-        <DetailReadonlyRow label="原始输入" value={displayValue(item.sourceText)} />
-        <DetailReadonlyRow label="创建时间" value={formatDateTime(item.createdAt)} />
-        <DetailReadonlyRow label="更新时间" value={formatDateTime(item.updatedAt)} />
+        <section className="py-3">
+          <button
+            type="button"
+            className="text-xs text-blue-600 hover:underline"
+            onClick={() => setSourceTextExpanded((current) => !current)}
+          >
+            {sourceTextExpanded ? "收起原始输入片段" : "展开原始输入片段"}
+          </button>
+          {sourceTextExpanded ? (
+            <div className="mt-2 rounded border border-zinc-200 bg-zinc-50 p-2 text-xs leading-relaxed text-zinc-700 whitespace-pre-wrap break-all">
+              {displayValue(item.sourceText)}
+            </div>
+          ) : null}
+        </section>
+      </div>
+
+      <div className="shrink-0 border-t border-zinc-100 px-3 py-2 text-[11px] text-zinc-500">
+        创建 {formatDateTime(item.createdAt)} · 更新{" "}
+        {formatDateTime(item.updatedAt)}
       </div>
     </aside>
   );

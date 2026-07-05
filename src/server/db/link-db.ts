@@ -1,6 +1,7 @@
 import Database from "better-sqlite3";
 import fs from "node:fs";
 import path from "node:path";
+import { initLinkDatabase } from "@/server/db/init-link-db";
 import { getLinkLibraryWorkspaceDir } from "@/server/config/workspace-path";
 
 const DB_DIR = getLinkLibraryWorkspaceDir();
@@ -14,6 +15,7 @@ export function getLinkDatabasePath(): string {
 
 export function getLinkDatabase(): Database.Database {
   if (dbInstance) {
+    initLinkDatabase(dbInstance);
     return dbInstance;
   }
 
@@ -22,6 +24,7 @@ export function getLinkDatabase(): Database.Database {
   const db = new Database(DB_PATH);
   db.pragma("journal_mode = WAL");
   db.pragma("foreign_keys = ON");
+  initLinkDatabase(db);
 
   dbInstance = db;
   return db;

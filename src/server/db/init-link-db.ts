@@ -31,6 +31,7 @@ CREATE TABLE IF NOT EXISTS resource_links (
   semester TEXT,
   subject TEXT,
   resource_year TEXT,
+  textbook_edition TEXT,
 
   status TEXT NOT NULL DEFAULT 'normal' CHECK (status IN ('normal', 'invalid')),
   favorite INTEGER NOT NULL DEFAULT 0 CHECK (favorite IN (0, 1)),
@@ -54,6 +55,7 @@ const CREATE_SEARCH_INDEXES = [
   `CREATE INDEX IF NOT EXISTS idx_resource_links_resource_category ON resource_links(resource_category);`,
   `CREATE INDEX IF NOT EXISTS idx_resource_links_resource_year ON resource_links(resource_year);`,
   `CREATE INDEX IF NOT EXISTS idx_resource_links_subject ON resource_links(subject);`,
+  `CREATE INDEX IF NOT EXISTS idx_resource_links_textbook_edition ON resource_links(textbook_edition);`,
   `CREATE INDEX IF NOT EXISTS idx_resource_links_created_at ON resource_links(created_at);`,
 ];
 
@@ -68,6 +70,19 @@ BEGIN
 END;
 `;
 
+function migrateSchema(db: Database.Database): void {
+  const columns = db
+    .prepare(`PRAGMA table_info(resource_links)`)
+    .all() as Array<{ name: string }>;
+
+  if (!columns.some((column) => column.name === "textbook_edition")) {
+    db.exec(`ALTER TABLE resource_links ADD COLUMN textbook_edition TEXT`);
+    db.exec(
+      `CREATE INDEX IF NOT EXISTS idx_resource_links_textbook_edition ON resource_links(textbook_edition)`,
+    );
+  }
+}
+
 function seedAppMeta(db: Database.Database): void {
   const upsertMeta = db.prepare(`
     INSERT INTO app_meta (key, value, updated_at)
@@ -77,7 +92,7 @@ function seedAppMeta(db: Database.Database): void {
       updated_at = CURRENT_TIMESTAMP
   `);
 
-  upsertMeta.run({ key: "schema_version", value: "1" });
+  upsertMeta.run({ key: "schema_version", value: "2" });
   upsertMeta.run({ key: "app_name", value: "学习资料链接库" });
 }
 
@@ -85,6 +100,7 @@ export function initLinkDatabase(db: Database.Database): void {
   db.exec(CREATE_APP_META_TABLE);
   db.exec(CREATE_RESOURCE_LINKS_TABLE);
   db.exec(CREATE_UNIQUE_INDEX);
+  migrateSchema(db);
 
   for (const statement of CREATE_SEARCH_INDEXES) {
     db.exec(statement);

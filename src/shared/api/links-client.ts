@@ -20,6 +20,7 @@ export type ListLinksParams = {
   semester?: string;
   subject?: string;
   resourceYear?: string;
+  textbookEdition?: string;
   limit?: number;
   offset?: number;
 };
@@ -49,6 +50,7 @@ export type ImportDefaultsInput = {
   semester?: string | null;
   subject?: string | null;
   resourceYear?: string | null;
+  textbookEdition?: string | null;
   status?: LinkStatus;
   favorite?: boolean;
 };
@@ -62,6 +64,7 @@ export type ImportDefaultsConfig = {
   semester: string;
   subject: string;
   resourceYear: string;
+  textbookEdition: string;
   status: LinkStatus;
   favorite: boolean;
 };
@@ -109,7 +112,24 @@ async function requestApi<T>(
     },
   });
 
-  const envelope = (await response.json()) as ApiEnvelope<T>;
+  const raw = await response.text();
+
+  if (!raw.trim()) {
+    throw new LinksClientError(
+      "INTERNAL_ERROR",
+      `服务器返回空响应（HTTP ${response.status}）`,
+    );
+  }
+
+  let envelope: ApiEnvelope<T>;
+  try {
+    envelope = JSON.parse(raw) as ApiEnvelope<T>;
+  } catch {
+    throw new LinksClientError(
+      "INTERNAL_ERROR",
+      `服务器返回非 JSON 响应（HTTP ${response.status}）`,
+    );
+  }
 
   if (!envelope.ok) {
     throw new LinksClientError(
@@ -245,6 +265,7 @@ export type BatchUpdateLinksResult = {
   successCount: number;
   failureCount: number;
   failures: BatchUpdateFailure[];
+  updated: ResourceLink[];
 };
 
 export async function batchUpdateLinks(
@@ -252,11 +273,13 @@ export async function batchUpdateLinks(
   patch: UpdateResourceLinkInput,
 ): Promise<BatchUpdateLinksResult> {
   const failures: BatchUpdateFailure[] = [];
+  const updated: ResourceLink[] = [];
   let successCount = 0;
 
   for (const id of ids) {
     try {
-      await updateLink(id, patch);
+      const item = await updateLink(id, patch);
+      updated.push(item);
       successCount += 1;
     } catch (error) {
       failures.push({
@@ -270,6 +293,7 @@ export async function batchUpdateLinks(
     successCount,
     failureCount: failures.length,
     failures,
+    updated,
   };
 }
 

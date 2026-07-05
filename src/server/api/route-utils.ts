@@ -33,5 +33,10 @@ export function handleRepositoryError(error: unknown): NextResponse {
     return jsonDuplicateLink();
   }
 
-  throw error;
+  console.error(error);
+
+  const message =
+    error instanceof Error ? error.message : "服务器内部错误";
+
+  return jsonFailure("INTERNAL_ERROR", message, 500);
 }

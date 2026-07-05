@@ -22,6 +22,7 @@ export const createResourceLinkSchema = z.object({
   semester: nullableString,
   subject: nullableString,
   resourceYear: nullableString,
+  textbookEdition: nullableString,
   status: linkStatusSchema.default("normal"),
   favorite: z.boolean().optional().default(false),
   sourceText: nullableString,
@@ -40,6 +41,7 @@ export const updateResourceLinkSchema = z
     semester: nullableString,
     subject: nullableString,
     resourceYear: nullableString,
+    textbookEdition: nullableString,
     status: linkStatusSchema,
     favorite: z.boolean().optional(),
     sourceText: nullableString,
@@ -71,6 +73,7 @@ export const importApplyDefaultsSchema = z
     semester: nullableString,
     subject: nullableString,
     resourceYear: nullableString,
+    textbookEdition: nullableString,
     status: linkStatusSchema,
     favorite: z.boolean().optional(),
   })
@@ -92,6 +95,7 @@ export const importDefaultsConfigSchema = z.object({
   semester: z.string().default(""),
   subject: z.string().default(""),
   resourceYear: z.string().default(""),
+  textbookEdition: z.string().default(""),
   status: linkStatusSchema.default("normal"),
   favorite: z.boolean().default(false),
 });
@@ -112,6 +116,7 @@ export const listResourceLinksQuerySchema = z.object({
   semester: z.string().optional(),
   subject: z.string().optional(),
   resourceYear: z.string().optional(),
+  textbookEdition: z.string().optional(),
   limit: z.coerce.number().int().min(1).max(200).optional().default(50),
   offset: z.coerce.number().int().min(0).optional().default(0),
 });
@@ -139,6 +144,7 @@ export const exportExcelQuerySchema = z.object({
   semester: z.string().optional(),
   subject: z.string().optional(),
   resourceYear: z.string().optional(),
+  textbookEdition: z.string().optional(),
 });
 
 export type ExportExcelQuery = z.infer<typeof exportExcelQuerySchema>;

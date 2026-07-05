@@ -22,6 +22,7 @@ export type ResourceLink = {
   semester: string | null;
   subject: string | null;
   resourceYear: string | null;
+  textbookEdition: string | null;
   status: LinkStatus;
   favorite: boolean;
   sourceText: string | null;
@@ -50,6 +51,7 @@ export type UpdateResourceLinkInput = Partial<
     | "semester"
     | "subject"
     | "resourceYear"
+    | "textbookEdition"
     | "status"
     | "favorite"
     | "sourceText"

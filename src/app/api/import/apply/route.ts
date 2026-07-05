@@ -37,6 +37,7 @@ export async function POST(request: NextRequest) {
     semester: defaults.semester ?? null,
     subject: defaults.subject ?? null,
     resourceYear: defaults.resourceYear ?? null,
+    textbookEdition: defaults.textbookEdition ?? null,
     status: defaults.status ?? "normal",
     favorite: defaults.favorite ?? false,
   }));

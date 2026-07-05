@@ -30,6 +30,7 @@ import { LinkDetailPanel } from "./LinkDetailPanel";
 import { LinkFormDialog, type LinkFormMode } from "./LinkFormDialog";
 import { LinkImportDialog } from "./LinkImportDialog";
 import { LinkTable } from "./LinkTable";
+import { itemMatchesFilters } from "./link-filter-utils";
 import { copyToClipboard } from "./link-ui-utils";
 import { getToastClassName, usePageToast } from "./use-page-toast";
 
@@ -50,6 +51,7 @@ function filtersToParams(
     semester: filters.semester || undefined,
     subject: filters.subject || undefined,
     resourceYear: filters.resourceYear || undefined,
+    textbookEdition: filters.textbookEdition || undefined,
     limit: PAGE_SIZE,
     offset: pageOffset,
   };
@@ -69,6 +71,7 @@ function filtersToExportParams(
     semester: filters.semester || undefined,
     subject: filters.subject || undefined,
     resourceYear: filters.resourceYear || undefined,
+    textbookEdition: filters.textbookEdition || undefined,
   };
 }
 
@@ -142,6 +145,43 @@ export function LinkLibraryPage() {
       }
     },
     [showToast],
+  );
+
+  const applyLocalItemUpdate = useCallback(
+    (updated: ResourceLink) => {
+      const matches = itemMatchesFilters(updated, appliedFilters);
+
+      setItems((current) => {
+        const index = current.findIndex((item) => item.id === updated.id);
+        if (!matches) {
+          if (index === -1) return current;
+          return current.filter((item) => item.id !== updated.id);
+        }
+        if (index === -1) return current;
+        const next = [...current];
+        next[index] = updated;
+        return next;
+      });
+
+      if (!matches) {
+        setTotal((current) => Math.max(0, current - 1));
+        setSelectedRowIds((current) => {
+          if (!current.has(updated.id)) return current;
+          const next = new Set(current);
+          next.delete(updated.id);
+          return next;
+        });
+        setSelectedItem((current) =>
+          current?.id === updated.id ? null : current,
+        );
+        return;
+      }
+
+      setSelectedItem((current) =>
+        current?.id === updated.id ? updated : current,
+      );
+    },
+    [appliedFilters],
   );
 
   useEffect(() => {
@@ -245,7 +285,7 @@ export function LinkLibraryPage() {
         payload as UpdateResourceLinkInput,
       );
       setFormOpen(false);
-      await refreshList(appliedFilters, offset);
+      applyLocalItemUpdate(updated);
       setSelectedItem(updated);
       showToast("编辑资料成功。", "success");
     } catch (error) {
@@ -269,6 +309,8 @@ export function LinkLibraryPage() {
       await deleteLink(item.id);
       const index = items.findIndex((entry) => entry.id === item.id);
       const nextItems = items.filter((entry) => entry.id !== item.id);
+      setItems(nextItems);
+      setTotal((current) => Math.max(0, current - 1));
       setSelectedItem((current) => {
         if (current?.id !== item.id) return current;
         return nextItems[index] ?? nextItems[index - 1] ?? null;
@@ -279,7 +321,6 @@ export function LinkLibraryPage() {
         return next;
       });
       setDeleteConfirmItem(null);
-      await refreshList(appliedFilters, offset, false);
       showToast("删除资料成功。", "success");
     } catch (error) {
       showToast(getErrorMessage(error), "error");
@@ -293,8 +334,7 @@ export function LinkLibraryPage() {
       const updated = await updateLink(item.id, {
         favorite: !item.favorite,
       });
-      setSelectedItem(updated);
-      await refreshList(appliedFilters, offset);
+      applyLocalItemUpdate(updated);
       showToast(updated.favorite ? "已收藏。" : "已取消收藏。", "success");
     } catch (error) {
       showToast(getErrorMessage(error), "error");
@@ -306,14 +346,7 @@ export function LinkLibraryPage() {
       const updated = await updateLink(item.id, {
         status: item.status === "normal" ? "invalid" : "normal",
       });
-
-      if (appliedFilters.status === "normal" && updated.status === "invalid") {
-        setSelectedItem(null);
-      } else {
-        setSelectedItem(updated);
-      }
-
-      await refreshList(appliedFilters, offset, false);
+      applyLocalItemUpdate(updated);
       showToast(
         updated.status === "invalid" ? "已标记为已失效。" : "已标记为正常。",
         "success",
@@ -327,24 +360,13 @@ export function LinkLibraryPage() {
     async (id: string, patch: UpdateResourceLinkInput) => {
       try {
         const updated = await updateLink(id, patch);
-
-        if (
-          appliedFilters.status === "normal" &&
-          updated.status === "invalid" &&
-          selectedItem?.id === id
-        ) {
-          setSelectedItem(null);
-        } else {
-          setSelectedItem((current) => (current?.id === id ? updated : current));
-        }
-
-        await refreshList(appliedFilters, offset, false);
+        applyLocalItemUpdate(updated);
       } catch (error) {
         showToast(getErrorMessage(error), "error");
         throw error;
       }
     },
-    [appliedFilters, offset, refreshList, selectedItem?.id, showToast],
+    [applyLocalItemUpdate, showToast],
   );
 
   async function handleCopyInfo(item: ResourceLink) {
@@ -437,7 +459,9 @@ export function LinkLibraryPage() {
         result.failureCount > 0 ? "warning" : "success",
       );
       setSelectedRowIds(new Set());
-      await refreshList(appliedFilters, offset, false);
+      for (const updated of result.updated) {
+        applyLocalItemUpdate(updated);
+      }
 
       if (result.failureCount === 0) {
         closeBatchEditDialog();
@@ -506,7 +530,7 @@ export function LinkLibraryPage() {
           onDropdownApply={handleDropdownApply}
         />
 
-        <div className="grid min-h-0 flex-1 grid-cols-1 gap-3 xl:grid-cols-[minmax(0,1fr)_340px]">
+        <div className="grid min-h-0 flex-1 grid-cols-1 gap-3 xl:grid-cols-[minmax(0,1fr)_380px]">
           <div className="flex min-h-0 min-w-0 flex-col gap-2">
             {selectedRowIds.size > 0 ? (
               <div className="flex shrink-0 flex-wrap items-center gap-3 rounded border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-900">

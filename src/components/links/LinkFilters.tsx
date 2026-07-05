@@ -13,6 +13,7 @@ export type LinkFilterValues = {
   semester: string;
   subject: string;
   resourceYear: string;
+  textbookEdition: string;
 };
 
 type LinkFiltersProps = {
@@ -34,6 +35,7 @@ export const defaultLinkFilterValues: LinkFilterValues = {
   semester: "",
   subject: "",
   resourceYear: "",
+  textbookEdition: "",
 };
 
 const DROPDOWN_KEYS = new Set([
@@ -72,8 +74,8 @@ export function LinkFilters({
         <input
           id="filter-q"
           className={`${controlClassName} w-[280px]`}
-          placeholder="搜索：标题/备注/科目/年级/年份/链接"
-          title="搜索：标题/备注/科目/年级/年份/链接"
+          placeholder="搜索：标题/备注/科目/年级/年份/版本/链接"
+          title="搜索：标题/备注/科目/年级/年份/版本/链接"
           value={values.q}
           onChange={(event) => updateField("q", event.target.value)}
           onKeyDown={handleTextKeyDown}
@@ -177,6 +179,17 @@ export function LinkFilters({
           placeholder="资料年份"
           value={values.resourceYear}
           onChange={(event) => updateField("resourceYear", event.target.value)}
+          onKeyDown={handleTextKeyDown}
+        />
+
+        <input
+          id="filter-textbook-edition"
+          className={`${controlClassName} w-[110px]`}
+          placeholder="教材版本"
+          value={values.textbookEdition}
+          onChange={(event) =>
+            updateField("textbookEdition", event.target.value)
+          }
           onKeyDown={handleTextKeyDown}
         />
 

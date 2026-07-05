@@ -11,6 +11,7 @@ export type ImportDefaultsValues = {
   semester: string;
   subject: string;
   resourceYear: string;
+  textbookEdition: string;
   status: LinkStatus;
   favorite: boolean;
 };
@@ -34,6 +35,7 @@ export const defaultImportDefaultsValues: ImportDefaultsValues = {
   semester: "",
   subject: "",
   resourceYear: "",
+  textbookEdition: "",
   status: "normal",
   favorite: false,
 };
@@ -235,6 +237,23 @@ export function ImportDefaultsForm({
             />
           </InlineField>
         </FormRow>
+        <InlineField id="import-textbook-edition" label="教材版本">
+          <input
+            id="import-textbook-edition"
+            className={inputClassName}
+            disabled={disabled}
+            value={values.textbookEdition}
+            onChange={(event) =>
+              updateField("textbookEdition", event.target.value)
+            }
+            onBlur={(event) =>
+              onPersist?.({
+                ...values,
+                textbookEdition: event.currentTarget.value,
+              })
+            }
+          />
+        </InlineField>
       </FormSection>
 
       <FormSection title="其他">
@@ -310,6 +329,7 @@ export function importDefaultsToInput(
     semester: values.semester.trim() || null,
     subject: values.subject.trim() || null,
     resourceYear: values.resourceYear.trim() || null,
+    textbookEdition: values.textbookEdition.trim() || null,
     status: values.status,
     favorite: values.favorite,
   };
