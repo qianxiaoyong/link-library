@@ -20,6 +20,16 @@ export type CoverageMatrixFilterOptions = {
   textbookEditions: string[];
 };
 
+export type CoverageMatrixSavedFilters = {
+  platform: LinkPlatform | "";
+  resourceYear: string;
+  semester: string;
+  schoolStage: string;
+  subject: string;
+  textbookEdition: string;
+  resourceCategory: ResourceCategory | "";
+};
+
 export const defaultCoverageMatrixFilterOptions: CoverageMatrixFilterOptions = {
   resourceYears: [],
   semesters: [],
@@ -42,8 +52,11 @@ export class CoverageMatrixClientError extends Error {
   }
 }
 
-async function requestCoverageMatrixApi<T>(path: string): Promise<T> {
-  const response = await fetch(path);
+async function requestCoverageMatrixApi<T>(
+  path: string,
+  init?: RequestInit,
+): Promise<T> {
+  const response = await fetch(path, init);
   const raw = await response.text();
 
   if (!raw.trim()) {
@@ -146,5 +159,26 @@ export async function fetchCoverageMatrix(
 export async function fetchCoverageMatrixFilterOptions(): Promise<CoverageMatrixFilterOptions> {
   return requestCoverageMatrixApi<CoverageMatrixFilterOptions>(
     "/api/stats/coverage-matrix/filter-options",
+  );
+}
+
+export async function fetchCoverageMatrixFilters(): Promise<CoverageMatrixSavedFilters> {
+  return requestCoverageMatrixApi<CoverageMatrixSavedFilters>(
+    "/api/stats/coverage-matrix/filters",
+  );
+}
+
+export async function saveCoverageMatrixFilters(
+  filters: CoverageMatrixSavedFilters,
+): Promise<CoverageMatrixSavedFilters> {
+  return requestCoverageMatrixApi<CoverageMatrixSavedFilters>(
+    "/api/stats/coverage-matrix/filters",
+    {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(filters),
+    },
   );
 }

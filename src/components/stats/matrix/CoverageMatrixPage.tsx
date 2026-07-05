@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   defaultMatrixFilterValues,
   MatrixFilters,
@@ -17,7 +17,9 @@ import {
   downloadCoverageMatrixExcel,
   fetchCoverageMatrix,
   fetchCoverageMatrixFilterOptions,
+  fetchCoverageMatrixFilters,
   getCoverageMatrixErrorMessage,
+  saveCoverageMatrixFilters,
   type CoverageMatrixFilterOptions,
   type CoverageMatrixResponse,
 } from "@/shared/api/coverage-matrix-client";
@@ -57,9 +59,8 @@ export function CoverageMatrixPage() {
   const [filters, setFilters] = useState<MatrixFilterValues>(
     defaultMatrixFilterValues,
   );
-  const [appliedFilters, setAppliedFilters] = useState<MatrixFilterValues>(
-    defaultMatrixFilterValues,
-  );
+  const [filtersInitialized, setFiltersInitialized] = useState(false);
+  const skipNextPersistRef = useRef(false);
   const [data, setData] = useState<CoverageMatrixResponse | null>(null);
   const [filterOptions, setFilterOptions] = useState<CoverageMatrixFilterOptions>(
     defaultCoverageMatrixFilterOptions,
@@ -104,9 +105,47 @@ export function CoverageMatrixPage() {
     [showToast],
   );
 
+  const persistFilters = useCallback(
+    async (nextFilters: MatrixFilterValues) => {
+      try {
+        await saveCoverageMatrixFilters(nextFilters);
+      } catch (error) {
+        showToast(getCoverageMatrixErrorMessage(error), "error");
+      }
+    },
+    [showToast],
+  );
+
   useEffect(() => {
-    void loadMatrix(appliedFilters);
-  }, [appliedFilters, loadMatrix]);
+    async function initializeFilters() {
+      try {
+        const saved = await fetchCoverageMatrixFilters();
+        skipNextPersistRef.current = true;
+        setFilters(saved);
+      } catch (error) {
+        showToast(getCoverageMatrixErrorMessage(error), "error");
+      } finally {
+        setFiltersInitialized(true);
+      }
+    }
+
+    void initializeFilters();
+  }, [showToast]);
+
+  useEffect(() => {
+    if (!filtersInitialized) {
+      return;
+    }
+
+    void loadMatrix(filters);
+
+    if (skipNextPersistRef.current) {
+      skipNextPersistRef.current = false;
+      return;
+    }
+
+    void persistFilters(filters);
+  }, [filters, filtersInitialized, loadMatrix, persistFilters]);
 
   useEffect(() => {
     void loadFilterOptions();
@@ -116,19 +155,22 @@ export function CoverageMatrixPage() {
     void loadNotes();
   }, [loadNotes]);
 
+  function handleFiltersChange(nextFilters: MatrixFilterValues) {
+    setFilters(nextFilters);
+  }
+
   function handleSearch() {
-    setAppliedFilters({ ...filters });
+    void loadMatrix(filters);
   }
 
   function handleReset() {
     setFilters(defaultMatrixFilterValues);
-    setAppliedFilters(defaultMatrixFilterValues);
   }
 
   function handleExportExcel() {
     setExporting(true);
     try {
-      downloadCoverageMatrixExcel(filtersToParams(appliedFilters));
+      downloadCoverageMatrixExcel(filtersToParams(filters));
       showToast("已开始导出覆盖矩阵 Excel。", "success");
     } catch (error) {
       showToast(getCoverageMatrixErrorMessage(error), "error");
@@ -192,14 +234,14 @@ export function CoverageMatrixPage() {
           <MatrixFilters
             values={filters}
             options={filterOptions}
-            onChange={setFilters}
+            onChange={handleFiltersChange}
             onSearch={handleSearch}
             onReset={handleReset}
           />
           <button
             type="button"
             onClick={handleExportExcel}
-            disabled={exporting || loading}
+            disabled={exporting || loading || !filtersInitialized}
             className="h-9 shrink-0 rounded border border-zinc-300 bg-white px-2.5 text-xs font-medium text-zinc-800 hover:bg-zinc-50 disabled:opacity-60"
           >
             {exporting ? "导出中..." : "导出Excel"}
@@ -217,8 +259,8 @@ export function CoverageMatrixPage() {
 
         <CoverageMatrixTable
           data={data}
-          loading={loading}
-          drillDownFilters={appliedFilters}
+          loading={loading || !filtersInitialized}
+          drillDownFilters={filters}
           notes={notes}
           onOpenNote={handleOpenNote}
         />
