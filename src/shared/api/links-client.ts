@@ -31,6 +31,7 @@ export type ExportExcelParams = Omit<ListLinksParams, "limit" | "offset"> & {
 
 export type BackupDatabaseResponse = {
   backupPath: string;
+  relativePath: string;
   fileName: string;
   createdAt: string;
 };

@@ -33,6 +33,11 @@ import { LinkTable } from "./LinkTable";
 import { itemMatchesFilters } from "./link-filter-utils";
 import { copyToClipboard } from "./link-ui-utils";
 import { getToastClassName, usePageToast } from "./use-page-toast";
+import { LibraryShell } from "@/components/library-shell/LibraryShell";
+import {
+  getWorkspaceErrorMessage,
+  openBackupDirectory,
+} from "@/shared/api/workspace-client";
 
 const PAGE_SIZE = 50;
 
@@ -75,11 +80,17 @@ function filtersToExportParams(
   };
 }
 
-export function LinkLibraryPage() {
+export type LinkLibraryPageProps = {
+  initialFilters?: LinkFilterValues;
+};
+
+export function LinkLibraryPage({
+  initialFilters = defaultLinkFilterValues,
+}: LinkLibraryPageProps) {
   const { toast, showToast } = usePageToast();
-  const [filters, setFilters] = useState<LinkFilterValues>(defaultLinkFilterValues);
+  const [filters, setFilters] = useState<LinkFilterValues>(initialFilters);
   const [appliedFilters, setAppliedFilters] =
-    useState<LinkFilterValues>(defaultLinkFilterValues);
+    useState<LinkFilterValues>(initialFilters);
   const [offset, setOffset] = useState(0);
   const [items, setItems] = useState<ResourceLink[]>([]);
   const [total, setTotal] = useState(0);
@@ -93,6 +104,7 @@ export function LinkLibraryPage() {
   const [formError, setFormError] = useState("");
   const [importOpen, setImportOpen] = useState(false);
   const [backingUp, setBackingUp] = useState(false);
+  const [openingBackupDir, setOpeningBackupDir] = useState(false);
   const [batchEditOpen, setBatchEditOpen] = useState(false);
   const [batchEditSaving, setBatchEditSaving] = useState(false);
   const [batchEditSelectedCount, setBatchEditSelectedCount] = useState(0);
@@ -412,13 +424,26 @@ export function LinkLibraryPage() {
     try {
       const result = await backupDatabase();
       showToast(
-        `数据库备份成功：${result.fileName}`,
+        `备份成功：${result.backupPath}`,
         "success",
       );
     } catch (error) {
       showToast(getErrorMessage(error), "error");
     } finally {
       setBackingUp(false);
+    }
+  }
+
+  async function handleOpenBackupDirectory() {
+    setOpeningBackupDir(true);
+
+    try {
+      const result = await openBackupDirectory();
+      showToast(`已打开备份目录：${result.backupDirectory}`, "success");
+    } catch (error) {
+      showToast(getWorkspaceErrorMessage(error), "error");
+    } finally {
+      setOpeningBackupDir(false);
     }
   }
 
@@ -476,51 +501,50 @@ export function LinkLibraryPage() {
   }
 
   return (
-    <div className="flex h-screen flex-col overflow-hidden bg-zinc-100">
-      <header className="shrink-0 border-b border-zinc-200 bg-white">
-        <div className="flex h-14 items-center justify-between gap-4 px-4">
-          <div className="min-w-0 shrink">
-            <h1 className="truncate text-lg font-semibold text-zinc-900">
-              学习资料链接库
-            </h1>
-            <p className="truncate text-xs text-zinc-600">
-              管理百度网盘与夸克网盘学习资料链接
-            </p>
-          </div>
-          <div className="flex shrink-0 flex-nowrap items-center gap-1.5 overflow-x-auto">
-            <button
-              type="button"
-              onClick={() => setImportOpen(true)}
-              className="whitespace-nowrap rounded bg-blue-600 px-2.5 py-1.5 text-xs font-medium text-white hover:bg-blue-700"
-            >
-              批量导入
-            </button>
-            <button
-              type="button"
-              onClick={openCreateForm}
-              className="whitespace-nowrap rounded border border-zinc-300 bg-white px-2.5 py-1.5 text-xs font-medium text-zinc-800 hover:bg-zinc-50"
-            >
-              新增资料
-            </button>
-            <button
-              type="button"
-              onClick={handleExportExcel}
-              className="whitespace-nowrap rounded border border-zinc-300 bg-white px-2.5 py-1.5 text-xs font-medium text-zinc-800 hover:bg-zinc-50"
-            >
-              导出Excel
-            </button>
-            <button
-              type="button"
-              onClick={() => void handleBackupDatabase()}
-              disabled={backingUp}
-              className="whitespace-nowrap rounded border border-zinc-300 bg-white px-2.5 py-1.5 text-xs font-medium text-zinc-800 hover:bg-zinc-50 disabled:opacity-60"
-            >
-              {backingUp ? "备份中..." : "备份数据库"}
-            </button>
-          </div>
-        </div>
-      </header>
-
+    <LibraryShell
+      activeView="links"
+      actions={
+        <>
+          <button
+            type="button"
+            onClick={() => setImportOpen(true)}
+            className="whitespace-nowrap rounded bg-blue-600 px-2.5 py-1.5 text-xs font-medium text-white hover:bg-blue-700"
+          >
+            批量导入
+          </button>
+          <button
+            type="button"
+            onClick={openCreateForm}
+            className="whitespace-nowrap rounded border border-zinc-300 bg-white px-2.5 py-1.5 text-xs font-medium text-zinc-800 hover:bg-zinc-50"
+          >
+            新增资料
+          </button>
+          <button
+            type="button"
+            onClick={handleExportExcel}
+            className="whitespace-nowrap rounded border border-zinc-300 bg-white px-2.5 py-1.5 text-xs font-medium text-zinc-800 hover:bg-zinc-50"
+          >
+            导出Excel
+          </button>
+          <button
+            type="button"
+            onClick={() => void handleBackupDatabase()}
+            disabled={backingUp}
+            className="whitespace-nowrap rounded border border-zinc-300 bg-white px-2.5 py-1.5 text-xs font-medium text-zinc-800 hover:bg-zinc-50 disabled:opacity-60"
+          >
+            {backingUp ? "备份中..." : "备份数据库"}
+          </button>
+          <button
+            type="button"
+            onClick={() => void handleOpenBackupDirectory()}
+            disabled={openingBackupDir}
+            className="whitespace-nowrap rounded border border-zinc-300 bg-white px-2.5 py-1.5 text-xs font-medium text-zinc-800 hover:bg-zinc-50 disabled:opacity-60"
+          >
+            {openingBackupDir ? "打开中..." : "打开目录"}
+          </button>
+        </>
+      }
+    >
       <div className="flex min-h-0 flex-1 flex-col gap-2 px-4 py-2">
         <LinkFilters
           values={filters}
@@ -665,6 +689,6 @@ export function LinkLibraryPage() {
           if (!deleteConfirming) setDeleteConfirmItem(null);
         }}
       />
-    </div>
+    </LibraryShell>
   );
 }

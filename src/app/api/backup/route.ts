@@ -9,7 +9,8 @@ export async function POST() {
     const result = backupLinkDatabase();
 
     return jsonSuccess({
-      backupPath: result.relativePath,
+      backupPath: result.backupPath,
+      relativePath: result.relativePath,
       fileName: result.fileName,
       createdAt: result.createdAt,
     });
