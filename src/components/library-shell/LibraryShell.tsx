@@ -7,12 +7,14 @@ import { LibraryWorkspaceSubtitle } from "./LibraryWorkspaceSubtitle";
 
 type LibraryShellProps = {
   activeView: LibraryView;
+  subtitleOverride?: string;
   actions?: ReactNode;
   children: ReactNode;
 };
 
 export function LibraryShell({
   activeView,
+  subtitleOverride,
   actions,
   children,
 }: LibraryShellProps) {
@@ -24,10 +26,13 @@ export function LibraryShell({
             <h1 className="truncate text-lg font-semibold text-zinc-900">
               学习资料链接库
             </h1>
-            <LibraryWorkspaceSubtitle activeView={activeView} />
+            <LibraryWorkspaceSubtitle
+              activeView={activeView}
+              subtitleOverride={subtitleOverride}
+            />
           </div>
           <div className="flex shrink-0 flex-nowrap items-center gap-1.5 overflow-x-auto">
-            <LibraryViewToggle activeView={activeView} />
+            <LibraryViewToggle />
             {actions}
           </div>
         </div>

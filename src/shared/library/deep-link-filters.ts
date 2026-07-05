@@ -3,6 +3,7 @@ import type { ResourceCategory } from "@/shared/types/resource-link";
 export type LinksDeepLinkParams = {
   q?: string;
   resourceYear?: string;
+  semester?: string;
   subject?: string;
   textbookEdition?: string;
   resourceCategory?: ResourceCategory;
@@ -10,9 +11,17 @@ export type LinksDeepLinkParams = {
 
 export type StatsDrillDownFilters = {
   resourceYear?: string;
+  semester?: string;
   subject?: string;
   textbookEdition?: string;
   resourceCategory?: ResourceCategory | "";
+};
+
+export type MatrixDrillDownFilters = StatsDrillDownFilters;
+
+export type MatrixCellDrillDownTarget = {
+  subject: string;
+  textbookEdition: string;
 };
 
 const RESOURCE_CATEGORY_SET = new Set<ResourceCategory>([
@@ -43,6 +52,9 @@ export function encodeLinksDeepLinkParams(
   if (params.resourceYear?.trim()) {
     searchParams.set("resourceYear", params.resourceYear.trim());
   }
+  if (params.semester?.trim()) {
+    searchParams.set("semester", params.semester.trim());
+  }
   if (params.subject?.trim()) {
     searchParams.set("subject", params.subject.trim());
   }
@@ -62,6 +74,7 @@ export function decodeLinksDeepLinkParams(
   return {
     q: searchParams.get("q")?.trim() || undefined,
     resourceYear: searchParams.get("resourceYear")?.trim() || undefined,
+    semester: searchParams.get("semester")?.trim() || undefined,
     subject: searchParams.get("subject")?.trim() || undefined,
     textbookEdition: searchParams.get("textbookEdition")?.trim() || undefined,
     resourceCategory: parseResourceCategory(
@@ -75,15 +88,41 @@ export function buildLinksPagePath(params: LinksDeepLinkParams = {}): string {
   return query ? `/links?${query}` : "/links";
 }
 
+function normalizeDeepLinkField(value: string | undefined): string | undefined {
+  const trimmed = value?.trim();
+  if (!trimmed || trimmed === "未填") {
+    return undefined;
+  }
+  return trimmed;
+}
+
 export function buildStatsBookTitleDeepLink(
   statsFilters: StatsDrillDownFilters,
   bookTitle: string,
 ): string {
   return buildLinksPagePath({
     q: bookTitle,
-    resourceYear: statsFilters.resourceYear?.trim() || undefined,
-    subject: statsFilters.subject?.trim() || undefined,
-    textbookEdition: statsFilters.textbookEdition?.trim() || undefined,
+    resourceYear: normalizeDeepLinkField(statsFilters.resourceYear),
+    semester: normalizeDeepLinkField(statsFilters.semester),
+    subject: normalizeDeepLinkField(statsFilters.subject),
+    textbookEdition: normalizeDeepLinkField(statsFilters.textbookEdition),
     resourceCategory: statsFilters.resourceCategory || undefined,
+  });
+}
+
+export function buildMatrixCellDeepLink(
+  filters: MatrixDrillDownFilters,
+  bookTitle: string,
+  column: MatrixCellDrillDownTarget,
+  rowResourceCategory?: ResourceCategory | null,
+): string {
+  return buildLinksPagePath({
+    q: bookTitle,
+    resourceYear: normalizeDeepLinkField(filters.resourceYear),
+    semester: normalizeDeepLinkField(filters.semester),
+    subject: normalizeDeepLinkField(column.subject),
+    textbookEdition: normalizeDeepLinkField(column.textbookEdition),
+    resourceCategory:
+      filters.resourceCategory || rowResourceCategory || undefined,
   });
 }

@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import {
   buildLinksPagePath,
+  buildMatrixCellDeepLink,
   buildStatsBookTitleDeepLink,
   decodeLinksDeepLinkParams,
   encodeLinksDeepLinkParams,
@@ -42,6 +43,7 @@ function main(): void {
     assert.deepEqual(decoded, {
       q: "一本预备",
       resourceYear: "2026",
+      semester: undefined,
       subject: "数学",
       textbookEdition: "北师",
       resourceCategory: "practice",
@@ -77,6 +79,26 @@ function main(): void {
       new URLSearchParams("resourceCategory=invalid"),
     );
     assert.equal(decoded.resourceCategory, undefined);
+  });
+
+  runTest("矩阵单元格深链包含学期与列维度", () => {
+    const href = buildMatrixCellDeepLink(
+      {
+        resourceYear: "2026",
+        semester: "上册",
+        resourceCategory: "practice",
+      },
+      "53天天练",
+      { subject: "数学", textbookEdition: "人教" },
+      "practice",
+    );
+
+    assert.match(href, /resourceYear=2026/);
+    assert.match(href, /semester=%E4%B8%8A%E5%86%8C/);
+    assert.match(href, /subject=%E6%95%B0%E5%AD%A6/);
+    assert.match(href, /textbookEdition=%E4%BA%BA%E6%95%99/);
+    assert.match(href, /resourceCategory=practice/);
+    assert.match(href, /q=53%E5%A4%A9%E5%A4%A9%E7%BB%83/);
   });
 
   console.log("\n全部深链测试通过。");

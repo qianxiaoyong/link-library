@@ -6,12 +6,14 @@ import type { LibraryView } from "./LibraryViewToggle";
 
 type LibraryWorkspaceSubtitleProps = {
   activeView: LibraryView;
+  subtitleOverride?: string;
 };
 
 const STATS_SUBTITLE = "按标题《》内容汇总各年级分布（仅统计正常资料）";
 
 export function LibraryWorkspaceSubtitle({
   activeView,
+  subtitleOverride,
 }: LibraryWorkspaceSubtitleProps) {
   const [databasePath, setDatabasePath] = useState<string | null>(null);
 
@@ -37,7 +39,9 @@ export function LibraryWorkspaceSubtitle({
 
   if (activeView === "stats") {
     return (
-      <p className="truncate text-xs text-zinc-600">{STATS_SUBTITLE}</p>
+      <p className="truncate text-xs text-zinc-600">
+        {subtitleOverride ?? STATS_SUBTITLE}
+      </p>
     );
   }
 

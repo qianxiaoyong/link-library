@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import {
   defaultStatsFilterValues,
@@ -82,12 +83,20 @@ export function StatsPage() {
   return (
     <LibraryShell activeView="stats">
       <main className="flex min-h-0 flex-1 flex-col gap-3 p-3">
-        <StatsFilters
-          values={filters}
-          onChange={setFilters}
-          onSearch={handleSearch}
-          onReset={handleReset}
-        />
+        <div className="flex shrink-0 flex-wrap items-center justify-between gap-2">
+          <StatsFilters
+            values={filters}
+            onChange={setFilters}
+            onSearch={handleSearch}
+            onReset={handleReset}
+          />
+          <Link
+            href="/stats/matrix"
+            className="shrink-0 rounded border border-zinc-300 bg-white px-2.5 py-1.5 text-xs font-medium text-zinc-800 hover:bg-zinc-50"
+          >
+            覆盖矩阵
+          </Link>
+        </div>
 
         <div className="flex shrink-0 flex-wrap items-center gap-x-4 gap-y-1 text-xs text-zinc-600">
           <span>筛选结果：{summary.totalRecords} 条</span>
