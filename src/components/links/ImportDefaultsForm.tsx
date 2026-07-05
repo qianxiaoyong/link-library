@@ -3,6 +3,7 @@
 import type { LinkStatus, ResourceCategory } from "@/shared/types/resource-link";
 
 export type ImportDefaultsValues = {
+  title: string;
   resourceCategory: ResourceCategory | "";
   description: string;
   schoolStage: string;
@@ -25,6 +26,7 @@ const inputClassName =
   "h-7 w-full min-w-0 rounded border border-zinc-300 bg-white px-2 py-0 text-sm text-zinc-900 outline-none focus:border-blue-500 disabled:bg-zinc-100";
 
 export const defaultImportDefaultsValues: ImportDefaultsValues = {
+  title: "",
   resourceCategory: "",
   description: "",
   schoolStage: "",
@@ -110,6 +112,21 @@ export function ImportDefaultsForm({
 
       <div className="divide-y divide-zinc-200/80">
         <FormSection title="基础">
+        <InlineField id="import-title" label="标题">
+          <input
+            id="import-title"
+            className={inputClassName}
+            disabled={disabled}
+            value={values.title}
+            onChange={(event) => updateField("title", event.target.value)}
+            onBlur={(event) =>
+              onPersist?.({
+                ...values,
+                title: event.currentTarget.value,
+              })
+            }
+          />
+        </InlineField>
         <FormRow>
           <InlineField id="import-resource-year" label="资料年份">
             <input

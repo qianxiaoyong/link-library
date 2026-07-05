@@ -10,6 +10,7 @@ export type PreviewItem = ParsedLinkItem & { key: string };
 type ImportPreviewTableProps = {
   items: PreviewItem[];
   onRemove: (key: string) => void;
+  onUpdateTitle?: (key: string, title: string) => void;
   disabled?: boolean;
 };
 
@@ -21,9 +22,13 @@ const narrowCellClassName =
 const headerClassName =
   "overflow-hidden text-ellipsis whitespace-nowrap px-2 py-2 text-left text-xs font-medium text-zinc-700";
 
+const inputClassName =
+  "w-full min-w-0 rounded border border-zinc-300 bg-white px-1.5 py-1 text-sm text-zinc-900 outline-none focus:border-blue-500 disabled:bg-zinc-50";
+
 export function ImportPreviewTable({
   items,
   onRemove,
+  onUpdateTitle,
   disabled = false,
 }: ImportPreviewTableProps) {
   if (items.length === 0) {
@@ -55,11 +60,24 @@ export function ImportPreviewTable({
                 {index + 1}
               </td>
               <td className={cellClassName}>{getPlatformLabel(item.platform)}</td>
-              <td
-                className={`${cellClassName} font-medium text-zinc-900`}
-                title={item.title}
-              >
-                {item.title}
+              <td className={cellClassName}>
+                {onUpdateTitle ? (
+                  <input
+                    className={inputClassName}
+                    value={item.title}
+                    disabled={disabled}
+                    onChange={(event) =>
+                      onUpdateTitle(item.key, event.target.value)
+                    }
+                  />
+                ) : (
+                  <span
+                    className="block overflow-hidden text-ellipsis font-medium text-zinc-900"
+                    title={item.title}
+                  >
+                    {item.title}
+                  </span>
+                )}
               </td>
               <td
                 className={`${cellClassName} text-blue-600`}

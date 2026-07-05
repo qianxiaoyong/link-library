@@ -45,3 +45,4 @@ next-env.d.ts
 /_workspace/link-library/*.db-*
 /_workspace/link-library/backups/
 /_workspace/link-library/import-defaults.json
+/release/

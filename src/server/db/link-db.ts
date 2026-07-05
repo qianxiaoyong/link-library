@@ -1,8 +1,9 @@
 import Database from "better-sqlite3";
 import fs from "node:fs";
 import path from "node:path";
+import { getLinkLibraryWorkspaceDir } from "@/server/config/workspace-path";
 
-const DB_DIR = path.join(process.cwd(), "_workspace", "link-library");
+const DB_DIR = getLinkLibraryWorkspaceDir();
 const DB_PATH = path.join(DB_DIR, "link-library.db");
 
 let dbInstance: Database.Database | null = null;

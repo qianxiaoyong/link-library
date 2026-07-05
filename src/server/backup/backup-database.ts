@@ -1,13 +1,9 @@
 import fs from "node:fs";
 import path from "node:path";
+import { getLinkLibraryWorkspaceDir } from "@/server/config/workspace-path";
 import { getLinkDatabase, getLinkDatabasePath } from "@/server/db/link-db";
 
-const BACKUP_DIR = path.join(
-  process.cwd(),
-  "_workspace",
-  "link-library",
-  "backups",
-);
+const BACKUP_DIR = path.join(getLinkLibraryWorkspaceDir(), "backups");
 
 function formatTimestamp(date = new Date()): string {
   const pad = (value: number) => String(value).padStart(2, "0");

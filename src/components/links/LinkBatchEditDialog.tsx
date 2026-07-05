@@ -8,6 +8,7 @@ import type {
 } from "@/shared/types/resource-link";
 
 export type BatchEditFieldKey =
+  | "title"
   | "resourceCategory"
   | "schoolStage"
   | "grade"
@@ -20,6 +21,7 @@ export type BatchEditFieldKey =
 
 export type BatchEditFormState = {
   enabled: Record<BatchEditFieldKey, boolean>;
+  title: string;
   resourceCategory: ResourceCategory | "";
   schoolStage: string;
   grade: string;
@@ -47,6 +49,7 @@ const inputClassName =
   "w-full min-w-0 rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 outline-none focus:border-blue-500 disabled:bg-zinc-50 disabled:text-zinc-500";
 
 const defaultEnabled: Record<BatchEditFieldKey, boolean> = {
+  title: false,
   resourceCategory: false,
   schoolStage: false,
   grade: false,
@@ -60,6 +63,7 @@ const defaultEnabled: Record<BatchEditFieldKey, boolean> = {
 
 const defaultFormState: BatchEditFormState = {
   enabled: defaultEnabled,
+  title: "",
   resourceCategory: "",
   schoolStage: "",
   grade: "",
@@ -80,6 +84,9 @@ export function buildBatchEditPatch(
 ): UpdateResourceLinkInput {
   const patch: UpdateResourceLinkInput = {};
 
+  if (form.enabled.title) {
+    patch.title = form.title.trim();
+  }
   if (form.enabled.resourceCategory) {
     patch.resourceCategory = form.resourceCategory || null;
   }
@@ -156,6 +163,7 @@ function LinkBatchEditDialogContent({
   onSubmit,
 }: Omit<LinkBatchEditDialogProps, "open">) {
   const [form, setForm] = useState<BatchEditFormState>(defaultFormState);
+  const [validationError, setValidationError] = useState("");
 
   const hasEnabledField = useMemo(
     () => Object.values(form.enabled).some(Boolean),
@@ -179,6 +187,13 @@ function LinkBatchEditDialogContent({
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     if (!hasEnabledField || saving) return;
+
+    if (form.enabled.title && !form.title.trim()) {
+      setValidationError("标题不能为空");
+      return;
+    }
+
+    setValidationError("");
     onSubmit(buildBatchEditPatch(form));
   }
 
@@ -204,6 +219,19 @@ function LinkBatchEditDialogContent({
             </p>
 
             <div className="space-y-3">
+              <BatchFieldRow
+                label="标题"
+                enabled={form.enabled.title}
+                onToggle={(checked) => toggleField("title", checked)}
+              >
+                <input
+                  className={inputClassName}
+                  value={form.title}
+                  disabled={!form.enabled.title}
+                  onChange={(event) => updateField("title", event.target.value)}
+                />
+              </BatchFieldRow>
+
               <BatchFieldRow
                 label="资料分类"
                 enabled={form.enabled.resourceCategory}
@@ -303,6 +331,12 @@ function LinkBatchEditDialogContent({
                 />
               </BatchFieldRow>
             </div>
+
+            {validationError ? (
+              <div className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
+                {validationError}
+              </div>
+            ) : null}
 
             {result ? (
               <div

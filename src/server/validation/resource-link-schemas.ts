@@ -82,6 +82,7 @@ export const importApplySchema = z.object({
 });
 
 export const importDefaultsConfigSchema = z.object({
+  title: z.string().default(""),
   resourceCategory: z
     .union([z.enum(RESOURCE_CATEGORIES), z.literal("")])
     .default(""),

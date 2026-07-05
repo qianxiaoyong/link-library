@@ -130,8 +130,36 @@ export function LinkImportDialog({
     setPreviewItems((current) => current.filter((item) => item.key !== key));
   }
 
+  function handleUpdatePreviewTitle(key: string, title: string) {
+    setPreviewItems((current) =>
+      current.map((item) => (item.key === key ? { ...item, title } : item)),
+    );
+  }
+
+  function handleDefaultsChange(values: ImportDefaultsValues) {
+    setDefaults(values);
+  }
+
+  function handlePersistDefaults(values: ImportDefaultsValues) {
+    persistDefaults(values);
+    if (values.title.trim()) {
+      const batchTitle = values.title.trim();
+      setPreviewItems((current) =>
+        current.map((item) => ({ ...item, title: batchTitle })),
+      );
+    }
+  }
+
   async function handleConfirmImport() {
     if (previewItems.length === 0 || applying || applyResult !== null) return;
+
+    const emptyTitleIndex = previewItems.findIndex(
+      (item) => item.title.trim() === "",
+    );
+    if (emptyTitleIndex >= 0) {
+      setApplyError(`第 ${emptyTitleIndex + 1} 条标题不能为空。`);
+      return;
+    }
 
     setApplying(true);
     setApplyError("");
@@ -257,6 +285,7 @@ export function LinkImportDialog({
                   <ImportPreviewTable
                     items={previewItems}
                     onRemove={handleRemovePreviewItem}
+                    onUpdateTitle={handleUpdatePreviewTitle}
                     disabled={applying || applyResult !== null}
                   />
                 </div>
@@ -275,8 +304,8 @@ export function LinkImportDialog({
               <div className="min-w-0 self-start">
                 <ImportDefaultsForm
                   values={defaults}
-                  onChange={setDefaults}
-                  onPersist={persistDefaults}
+                  onChange={handleDefaultsChange}
+                  onPersist={handlePersistDefaults}
                   disabled={applying || applyResult !== null}
                 />
               </div>

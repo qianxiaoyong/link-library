@@ -2,6 +2,7 @@
   "name": "link-library",
   "version": "0.1.0",
   "private": true,
+  "main": "electron/main.cjs",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -15,7 +16,12 @@
     "ui:test": "tsx scripts/test-ui-manual.ts",
     "ui:import:test": "tsx scripts/test-ui-import-manual.ts",
     "ui:batch-edit:test": "tsx scripts/test-ui-batch-edit-manual.ts",
-    "export-backup:test": "tsx scripts/test-export-backup.ts"
+    "export-backup:test": "tsx scripts/test-export-backup.ts",
+    "electron:dev": "cross-env ELECTRON_DEV=1 electron electron/main.cjs",
+    "electron:prepare": "npm run build && node scripts/prepare-electron-standalone.cjs && node scripts/rebuild-native-for-electron.cjs",
+    "electron:start": "cross-env ELECTRON_USE_STANDALONE=1 electron electron/main.cjs",
+    "electron:pack": "npm run electron:prepare && electron-builder --win --x64",
+    "electron:pack:dir": "npm run electron:prepare && electron-builder --win --x64 --dir"
   },
   "dependencies": {
     "better-sqlite3": "^12.11.1",
@@ -31,10 +37,48 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "cross-env": "^7.0.3",
+    "electron": "^35.0.0",
+    "electron-builder": "^25.1.8",
     "eslint": "^9",
     "eslint-config-next": "16.2.10",
     "tailwindcss": "^4",
     "tsx": "^4.23.0",
     "typescript": "^5"
+  },
+  "build": {
+    "appId": "com.linklibrary.desktop",
+    "productName": "学习资料链接库",
+    "npmRebuild": false,
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "electron/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": ".next/standalone",
+        "to": "standalone",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ],
+    "asarUnpack": [
+      "**/*.node"
+    ],
+    "win": {
+      "target": [
+        "nsis"
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "shortcutName": "学习资料链接库"
+    }
   }
 }

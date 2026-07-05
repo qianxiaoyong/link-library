@@ -54,6 +54,7 @@ export type ImportDefaultsInput = {
 };
 
 export type ImportDefaultsConfig = {
+  title: string;
   resourceCategory: ResourceCategory | "";
   description: string;
   schoolStage: string;

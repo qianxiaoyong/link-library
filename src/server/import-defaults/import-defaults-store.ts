@@ -1,14 +1,16 @@
 import fs from "node:fs";
 import path from "node:path";
+import { getLinkLibraryWorkspaceDir } from "@/server/config/workspace-path";
 import {
   importDefaultsConfigSchema,
   type ImportDefaultsConfigBody,
 } from "@/server/validation/resource-link-schemas";
 
-const CONFIG_DIR = path.join(process.cwd(), "_workspace", "link-library");
+const CONFIG_DIR = getLinkLibraryWorkspaceDir();
 const CONFIG_PATH = path.join(CONFIG_DIR, "import-defaults.json");
 
 export const defaultImportDefaultsConfig: ImportDefaultsConfigBody = {
+  title: "",
   resourceCategory: "",
   description: "",
   schoolStage: "",
