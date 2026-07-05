@@ -73,7 +73,6 @@ export function itemMatchesFilters(
       item.grade,
       item.resourceYear,
       item.textbookEdition,
-      item.url,
     ].some((value) => fieldContains(value, keyword));
 
     if (!matched) {

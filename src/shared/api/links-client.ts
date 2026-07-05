@@ -167,6 +167,9 @@ function buildFilterQueryString(
   if (params.resourceYear?.trim()) {
     searchParams.set("resourceYear", params.resourceYear.trim());
   }
+  if (params.textbookEdition?.trim()) {
+    searchParams.set("textbookEdition", params.textbookEdition.trim());
+  }
 
   return searchParams;
 }
@@ -199,6 +202,7 @@ export function buildExportExcelUrl(params: ExportExcelParams): string {
       "semester",
       "subject",
       "resourceYear",
+      "textbookEdition",
     ]) {
       searchParams.delete(key);
     }

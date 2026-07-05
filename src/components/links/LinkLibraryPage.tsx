@@ -530,7 +530,7 @@ export function LinkLibraryPage() {
           onDropdownApply={handleDropdownApply}
         />
 
-        <div className="grid min-h-0 flex-1 grid-cols-1 gap-3 xl:grid-cols-[minmax(0,1fr)_380px]">
+        <div className="grid min-h-0 flex-1 grid-cols-1 gap-3 xl:grid-cols-[minmax(0,1fr)_300px]">
           <div className="flex min-h-0 min-w-0 flex-col gap-2">
             {selectedRowIds.size > 0 ? (
               <div className="flex shrink-0 flex-wrap items-center gap-3 rounded border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-900">

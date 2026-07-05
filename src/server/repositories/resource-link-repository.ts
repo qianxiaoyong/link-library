@@ -115,10 +115,9 @@ function buildWhereClause(filters: ListResourceLinksFilters): {
       subject LIKE ? OR
       grade LIKE ? OR
       resource_year LIKE ? OR
-      textbook_edition LIKE ? OR
-      url LIKE ?
+      textbook_edition LIKE ?
     )`);
-    params.push(keyword, keyword, keyword, keyword, keyword, keyword, keyword);
+    params.push(keyword, keyword, keyword, keyword, keyword, keyword);
   }
 
   return { conditions, params };

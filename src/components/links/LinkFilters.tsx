@@ -74,12 +74,88 @@ export function LinkFilters({
         <input
           id="filter-q"
           className={`${controlClassName} w-[280px]`}
-          placeholder="搜索：标题/备注/科目/年级/年份/版本/链接"
-          title="搜索：标题/备注/科目/年级/年份/版本/链接"
+          placeholder="搜索：标题/备注/科目/年级/年份/版本"
+          title="搜索：标题/备注/科目/年级/年份/版本"
           value={values.q}
           onChange={(event) => updateField("q", event.target.value)}
           onKeyDown={handleTextKeyDown}
         />
+
+        <input
+          id="filter-resource-year"
+          className={`${controlClassName} w-[120px]`}
+          placeholder="资料年份"
+          value={values.resourceYear}
+          onChange={(event) => updateField("resourceYear", event.target.value)}
+          onKeyDown={handleTextKeyDown}
+        />
+
+        <input
+          id="filter-semester"
+          className={`${controlClassName} w-[100px]`}
+          placeholder="学期"
+          value={values.semester}
+          onChange={(event) => updateField("semester", event.target.value)}
+          onKeyDown={handleTextKeyDown}
+        />
+
+        <input
+          id="filter-school-stage"
+          className={`${controlClassName} w-[100px]`}
+          placeholder="学段"
+          value={values.schoolStage}
+          onChange={(event) => updateField("schoolStage", event.target.value)}
+          onKeyDown={handleTextKeyDown}
+        />
+
+        <input
+          id="filter-subject"
+          className={`${controlClassName} w-[110px]`}
+          placeholder="科目"
+          value={values.subject}
+          onChange={(event) => updateField("subject", event.target.value)}
+          onKeyDown={handleTextKeyDown}
+        />
+
+        <input
+          id="filter-grade"
+          className={`${controlClassName} w-[100px]`}
+          placeholder="年级"
+          value={values.grade}
+          onChange={(event) => updateField("grade", event.target.value)}
+          onKeyDown={handleTextKeyDown}
+        />
+
+        <input
+          id="filter-textbook-edition"
+          className={`${controlClassName} w-[110px]`}
+          placeholder="教材版本"
+          value={values.textbookEdition}
+          onChange={(event) =>
+            updateField("textbookEdition", event.target.value)
+          }
+          onKeyDown={handleTextKeyDown}
+        />
+
+        <select
+          id="filter-category"
+          className={`${controlClassName} w-[110px]`}
+          title="资料分类"
+          value={values.resourceCategory ?? ""}
+          onChange={(event) =>
+            updateField(
+              "resourceCategory",
+              (event.target.value ||
+                undefined) as LinkFilterValues["resourceCategory"],
+              true,
+            )
+          }
+        >
+          <option value="">分类：全部</option>
+          <option value="practice">练习</option>
+          <option value="paper">试卷</option>
+          <option value="special">专项</option>
+        </select>
 
         <select
           id="filter-platform"
@@ -116,82 +192,6 @@ export function LinkFilters({
           <option value="invalid">已失效</option>
           <option value="all">全部</option>
         </select>
-
-        <select
-          id="filter-category"
-          className={`${controlClassName} w-[110px]`}
-          title="资料分类"
-          value={values.resourceCategory ?? ""}
-          onChange={(event) =>
-            updateField(
-              "resourceCategory",
-              (event.target.value ||
-                undefined) as LinkFilterValues["resourceCategory"],
-              true,
-            )
-          }
-        >
-          <option value="">分类：全部</option>
-          <option value="practice">练习</option>
-          <option value="paper">试卷</option>
-          <option value="special">专项</option>
-        </select>
-
-        <input
-          id="filter-school-stage"
-          className={`${controlClassName} w-[100px]`}
-          placeholder="学段"
-          value={values.schoolStage}
-          onChange={(event) => updateField("schoolStage", event.target.value)}
-          onKeyDown={handleTextKeyDown}
-        />
-
-        <input
-          id="filter-grade"
-          className={`${controlClassName} w-[100px]`}
-          placeholder="年级"
-          value={values.grade}
-          onChange={(event) => updateField("grade", event.target.value)}
-          onKeyDown={handleTextKeyDown}
-        />
-
-        <input
-          id="filter-semester"
-          className={`${controlClassName} w-[100px]`}
-          placeholder="学期"
-          value={values.semester}
-          onChange={(event) => updateField("semester", event.target.value)}
-          onKeyDown={handleTextKeyDown}
-        />
-
-        <input
-          id="filter-subject"
-          className={`${controlClassName} w-[110px]`}
-          placeholder="科目"
-          value={values.subject}
-          onChange={(event) => updateField("subject", event.target.value)}
-          onKeyDown={handleTextKeyDown}
-        />
-
-        <input
-          id="filter-resource-year"
-          className={`${controlClassName} w-[120px]`}
-          placeholder="资料年份"
-          value={values.resourceYear}
-          onChange={(event) => updateField("resourceYear", event.target.value)}
-          onKeyDown={handleTextKeyDown}
-        />
-
-        <input
-          id="filter-textbook-edition"
-          className={`${controlClassName} w-[110px]`}
-          placeholder="教材版本"
-          value={values.textbookEdition}
-          onChange={(event) =>
-            updateField("textbookEdition", event.target.value)
-          }
-          onKeyDown={handleTextKeyDown}
-        />
 
         <select
           id="filter-favorite"
