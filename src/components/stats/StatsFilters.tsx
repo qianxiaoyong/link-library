@@ -14,8 +14,17 @@ export const defaultStatsFilterValues: StatsFilterValues = {
   resourceCategory: "",
 };
 
-const controlClassName =
-  "h-9 shrink-0 rounded border border-zinc-300 bg-white px-2 text-sm text-zinc-900 outline-none focus:border-blue-500";
+const controlBaseClassName =
+  "h-9 shrink-0 rounded border border-zinc-300 bg-white px-2 text-sm outline-none focus:border-blue-500";
+
+function buildSelectClassName(
+  widthClassName: string,
+  isDefault: boolean,
+): string {
+  return `${controlBaseClassName} ${widthClassName} ${
+    isDefault ? "text-zinc-400" : "text-zinc-900"
+  }`;
+}
 
 type StatsFiltersProps = {
   values: StatsFilterValues;
@@ -48,7 +57,7 @@ export function StatsFilters({
       <div className="flex min-h-[36px] items-center gap-2 overflow-x-auto">
         <input
           id="stats-filter-resource-year"
-          className={`${controlClassName} w-[120px]`}
+          className={`${controlBaseClassName} w-[120px] text-zinc-900`}
           placeholder="资料年份"
           value={values.resourceYear}
           onChange={(event) =>
@@ -59,7 +68,7 @@ export function StatsFilters({
 
         <input
           id="stats-filter-subject"
-          className={`${controlClassName} w-[110px]`}
+          className={`${controlBaseClassName} w-[110px] text-zinc-900`}
           placeholder="科目"
           value={values.subject}
           onChange={(event) => updateField("subject", event.target.value)}
@@ -68,7 +77,7 @@ export function StatsFilters({
 
         <input
           id="stats-filter-textbook-edition"
-          className={`${controlClassName} w-[110px]`}
+          className={`${controlBaseClassName} w-[110px] text-zinc-900`}
           placeholder="教材版本"
           value={values.textbookEdition}
           onChange={(event) =>
@@ -79,7 +88,7 @@ export function StatsFilters({
 
         <select
           id="stats-filter-category"
-          className={`${controlClassName} w-[110px]`}
+          className={buildSelectClassName("w-[110px]", !values.resourceCategory)}
           title="资料分类"
           value={values.resourceCategory}
           onChange={(event) =>
@@ -89,7 +98,7 @@ export function StatsFilters({
             )
           }
         >
-          <option value="">分类：全部</option>
+          <option value="">分类</option>
           <option value="practice">练习</option>
           <option value="paper">试卷</option>
           <option value="special">专项</option>

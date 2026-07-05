@@ -1,4 +1,6 @@
 import { getLinkDatabase } from "@/server/db/link-db";
+import type { CoverageMatrixFieldFilterOptions } from "@/server/filters/resource-link-filter-options";
+import { listCoverageMatrixFieldFilterOptions } from "@/server/filters/resource-link-filter-options";
 import type { CoverageMatrixQuery } from "@/server/validation/coverage-matrix-schemas";
 import type { CoverageMatrixInputRow } from "@/shared/stats/coverage-matrix";
 import type { ResourceCategory } from "@/shared/types/resource-link";
@@ -80,36 +82,8 @@ export function listCoverageMatrixRows(
   }));
 }
 
-export type CoverageMatrixFilterOptions = {
-  resourceYears: string[];
-  semesters: string[];
-  schoolStages: string[];
-  subjects: string[];
-  textbookEditions: string[];
-};
-
-function listDistinctFieldValues(field: string): string[] {
-  const db = getLinkDatabase();
-  const rows = db
-    .prepare(
-      `SELECT DISTINCT ${field} AS value
-       FROM resource_links
-       WHERE status = 'normal'
-         AND ${field} IS NOT NULL
-         AND TRIM(${field}) != ''
-       ORDER BY ${field} COLLATE NOCASE ASC`,
-    )
-    .all() as Array<{ value: string }>;
-
-  return rows.map((row) => row.value.trim());
-}
+export type CoverageMatrixFilterOptions = CoverageMatrixFieldFilterOptions;
 
 export function listCoverageMatrixFilterOptions(): CoverageMatrixFilterOptions {
-  return {
-    resourceYears: listDistinctFieldValues("resource_year"),
-    semesters: listDistinctFieldValues("semester"),
-    schoolStages: listDistinctFieldValues("school_stage"),
-    subjects: listDistinctFieldValues("subject"),
-    textbookEditions: listDistinctFieldValues("textbook_edition"),
-  };
+  return listCoverageMatrixFieldFilterOptions();
 }

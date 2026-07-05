@@ -22,11 +22,22 @@ export const defaultMatrixFilterValues: MatrixFilterValues = {
   resourceCategory: "",
 };
 
-const controlClassName =
-  "h-9 shrink-0 rounded border border-zinc-300 bg-white px-2 text-sm text-zinc-900 outline-none focus:border-blue-500";
+const controlBaseClassName =
+  "h-9 shrink-0 rounded border border-zinc-300 bg-white px-2 text-sm outline-none focus:border-blue-500";
 
-const FILTER_SELECT_WIDTH = "w-[136px]";
-const CATEGORY_SELECT_WIDTH = "w-[136px]";
+const FILTER_SELECT_WIDTH = "w-[116px]";
+const COMPACT_SELECT_WIDTH = "w-[76px]";
+const TEXTBOOK_SELECT_WIDTH = "w-[96px]";
+const PLATFORM_SELECT_WIDTH = "w-[106px]";
+
+function buildSelectClassName(
+  widthClassName: string,
+  isDefault: boolean,
+): string {
+  return `${controlBaseClassName} ${widthClassName} ${
+    isDefault ? "text-zinc-400" : "text-zinc-900"
+  }`;
+}
 
 type MatrixFiltersProps = {
   values: MatrixFilterValues;
@@ -48,6 +59,7 @@ type FilterSelectProps = {
   label: string;
   value: string;
   options: string[];
+  widthClassName?: string;
   onChange: (value: string) => void;
 };
 
@@ -56,6 +68,7 @@ function FilterSelect({
   label,
   value,
   options,
+  widthClassName = FILTER_SELECT_WIDTH,
   onChange,
 }: FilterSelectProps) {
   const mergedOptions = withSelectedOption(options, value);
@@ -63,12 +76,12 @@ function FilterSelect({
   return (
     <select
       id={id}
-      className={`${controlClassName} ${FILTER_SELECT_WIDTH}`}
+      className={buildSelectClassName(widthClassName, !value)}
       title={label}
       value={value}
       onChange={(event) => onChange(event.target.value)}
     >
-      <option value="">{label}：全部</option>
+      <option value="">{label}</option>
       {mergedOptions.map((option) => (
         <option key={option} value={option}>
           {option}
@@ -97,7 +110,7 @@ export function MatrixFilters({
       <div className="flex min-h-[36px] items-center gap-2 overflow-x-auto">
         <select
           id="matrix-filter-platform"
-          className={`${controlClassName} ${FILTER_SELECT_WIDTH}`}
+          className={buildSelectClassName(PLATFORM_SELECT_WIDTH, !values.platform)}
           title="平台"
           value={values.platform}
           onChange={(event) =>
@@ -107,7 +120,7 @@ export function MatrixFilters({
             )
           }
         >
-          <option value="">平台：全部</option>
+          <option value="">平台</option>
           {(Object.entries(LINK_PLATFORM_LABELS) as Array<[LinkPlatform, string]>).map(
             ([value, label]) => (
               <option key={value} value={value}>
@@ -130,6 +143,7 @@ export function MatrixFilters({
           label="学期"
           value={values.semester}
           options={options.semesters}
+          widthClassName={COMPACT_SELECT_WIDTH}
           onChange={(value) => updateField("semester", value)}
         />
 
@@ -138,6 +152,7 @@ export function MatrixFilters({
           label="学段"
           value={values.schoolStage}
           options={options.schoolStages}
+          widthClassName={COMPACT_SELECT_WIDTH}
           onChange={(value) => updateField("schoolStage", value)}
         />
 
@@ -146,6 +161,7 @@ export function MatrixFilters({
           label="科目"
           value={values.subject}
           options={options.subjects}
+          widthClassName={COMPACT_SELECT_WIDTH}
           onChange={(value) => updateField("subject", value)}
         />
 
@@ -154,12 +170,16 @@ export function MatrixFilters({
           label="教材版本"
           value={values.textbookEdition}
           options={options.textbookEditions}
+          widthClassName={TEXTBOOK_SELECT_WIDTH}
           onChange={(value) => updateField("textbookEdition", value)}
         />
 
         <select
           id="matrix-filter-category"
-          className={`${controlClassName} ${CATEGORY_SELECT_WIDTH}`}
+          className={buildSelectClassName(
+            COMPACT_SELECT_WIDTH,
+            !values.resourceCategory,
+          )}
           title="资料分类"
           value={values.resourceCategory}
           onChange={(event) =>
@@ -169,7 +189,7 @@ export function MatrixFilters({
             )
           }
         >
-          <option value="">分类：全部</option>
+          <option value="">分类</option>
           <option value="practice">练习</option>
           <option value="paper">试卷</option>
           <option value="special">专项</option>

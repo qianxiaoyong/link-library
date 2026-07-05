@@ -168,7 +168,13 @@ export function LinkTable({
                 <LinkStatusBadge status={item.status} />
               </td>
               <td className={`${CELL_CLASS} text-center`}>
-                {item.favorite ? "是" : "—"}
+                {item.favorite ? (
+                  <span aria-label="已收藏" title="已收藏">
+                    ⭐️
+                  </span>
+                ) : (
+                  "—"
+                )}
               </td>
               <td
                 className={`${CELL_CLASS} text-zinc-700`}

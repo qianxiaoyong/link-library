@@ -1,5 +1,7 @@
 "use client";
 
+import { LINK_PLATFORM_LABELS } from "@/shared/constants/link-taxonomy";
+import type { LinkFilterOptions } from "@/shared/api/links-client";
 import type { LinkPlatform, LinkStatus, ResourceCategory } from "@/shared/types/resource-link";
 
 export type LinkFilterValues = {
@@ -18,14 +20,22 @@ export type LinkFilterValues = {
 
 type LinkFiltersProps = {
   values: LinkFilterValues;
+  options: LinkFilterOptions;
   onChange: (values: LinkFilterValues) => void;
   onSearch: () => void;
   onReset: () => void;
   onDropdownApply: (values: LinkFilterValues) => void;
 };
 
-const controlClassName =
-  "h-9 shrink-0 rounded border border-zinc-300 bg-white px-2 text-sm text-zinc-900 outline-none focus:border-blue-500";
+const controlBaseClassName =
+  "h-9 shrink-0 rounded border border-zinc-300 bg-white px-2 text-sm outline-none focus:border-blue-500";
+
+const STANDARD_SELECT_WIDTH = "w-[116px]";
+const COMPACT_SELECT_WIDTH = "w-[76px]";
+const TEXTBOOK_SELECT_WIDTH = "w-[96px]";
+const PLATFORM_SELECT_WIDTH = "w-[106px]";
+const STATUS_SELECT_WIDTH = "w-[110px]";
+const FAVORITE_SELECT_WIDTH = "w-[100px]";
 
 export const defaultLinkFilterValues: LinkFilterValues = {
   q: "",
@@ -38,15 +48,75 @@ export const defaultLinkFilterValues: LinkFilterValues = {
   textbookEdition: "",
 };
 
-const DROPDOWN_KEYS = new Set([
+const DROPDOWN_KEYS = new Set<keyof LinkFilterValues>([
   "platform",
   "status",
   "resourceCategory",
   "favorite",
+  "resourceYear",
+  "semester",
+  "schoolStage",
+  "subject",
+  "grade",
+  "textbookEdition",
 ]);
+
+function buildSelectClassName(
+  widthClassName: string,
+  isDefault: boolean,
+): string {
+  return `${controlBaseClassName} ${widthClassName} ${
+    isDefault ? "text-zinc-400" : "text-zinc-900"
+  }`;
+}
+
+function withSelectedOption(options: string[], selected: string): string[] {
+  if (!selected || options.includes(selected)) {
+    return options;
+  }
+  return [selected, ...options];
+}
+
+type FilterSelectProps = {
+  id: string;
+  label: string;
+  value: string;
+  options: string[];
+  widthClassName?: string;
+  onChange: (value: string) => void;
+};
+
+function FilterSelect({
+  id,
+  label,
+  value,
+  options,
+  widthClassName = STANDARD_SELECT_WIDTH,
+  onChange,
+}: FilterSelectProps) {
+  const mergedOptions = withSelectedOption(options, value);
+
+  return (
+    <select
+      id={id}
+      className={buildSelectClassName(widthClassName, !value)}
+      title={label}
+      value={value}
+      onChange={(event) => onChange(event.target.value)}
+    >
+      <option value="">{label}</option>
+      {mergedOptions.map((option) => (
+        <option key={option} value={option}>
+          {option}
+        </option>
+      ))}
+    </select>
+  );
+}
 
 export function LinkFilters({
   values,
+  options,
   onChange,
   onSearch,
   onReset,
@@ -73,7 +143,7 @@ export function LinkFilters({
       <div className="flex min-h-[36px] items-center gap-2 overflow-x-auto">
         <input
           id="filter-q"
-          className={`${controlClassName} w-[280px]`}
+          className={`${controlBaseClassName} w-[280px] text-zinc-900`}
           placeholder="搜索：标题/备注/科目/年级/年份/版本"
           title="搜索：标题/备注/科目/年级/年份/版本"
           value={values.q}
@@ -81,65 +151,65 @@ export function LinkFilters({
           onKeyDown={handleTextKeyDown}
         />
 
-        <input
+        <FilterSelect
           id="filter-resource-year"
-          className={`${controlClassName} w-[120px]`}
-          placeholder="资料年份"
+          label="资料年份"
           value={values.resourceYear}
-          onChange={(event) => updateField("resourceYear", event.target.value)}
-          onKeyDown={handleTextKeyDown}
+          options={options.resourceYears}
+          onChange={(value) => updateField("resourceYear", value, true)}
         />
 
-        <input
+        <FilterSelect
           id="filter-semester"
-          className={`${controlClassName} w-[100px]`}
-          placeholder="学期"
+          label="学期"
           value={values.semester}
-          onChange={(event) => updateField("semester", event.target.value)}
-          onKeyDown={handleTextKeyDown}
+          options={options.semesters}
+          widthClassName={COMPACT_SELECT_WIDTH}
+          onChange={(value) => updateField("semester", value, true)}
         />
 
-        <input
+        <FilterSelect
           id="filter-school-stage"
-          className={`${controlClassName} w-[100px]`}
-          placeholder="学段"
+          label="学段"
           value={values.schoolStage}
-          onChange={(event) => updateField("schoolStage", event.target.value)}
-          onKeyDown={handleTextKeyDown}
+          options={options.schoolStages}
+          widthClassName={COMPACT_SELECT_WIDTH}
+          onChange={(value) => updateField("schoolStage", value, true)}
         />
 
-        <input
+        <FilterSelect
           id="filter-subject"
-          className={`${controlClassName} w-[110px]`}
-          placeholder="科目"
+          label="科目"
           value={values.subject}
-          onChange={(event) => updateField("subject", event.target.value)}
-          onKeyDown={handleTextKeyDown}
+          options={options.subjects}
+          widthClassName={COMPACT_SELECT_WIDTH}
+          onChange={(value) => updateField("subject", value, true)}
         />
 
-        <input
+        <FilterSelect
           id="filter-grade"
-          className={`${controlClassName} w-[100px]`}
-          placeholder="年级"
+          label="年级"
           value={values.grade}
-          onChange={(event) => updateField("grade", event.target.value)}
-          onKeyDown={handleTextKeyDown}
+          options={options.grades}
+          widthClassName={COMPACT_SELECT_WIDTH}
+          onChange={(value) => updateField("grade", value, true)}
         />
 
-        <input
+        <FilterSelect
           id="filter-textbook-edition"
-          className={`${controlClassName} w-[110px]`}
-          placeholder="教材版本"
+          label="教材版本"
           value={values.textbookEdition}
-          onChange={(event) =>
-            updateField("textbookEdition", event.target.value)
-          }
-          onKeyDown={handleTextKeyDown}
+          options={options.textbookEditions}
+          widthClassName={TEXTBOOK_SELECT_WIDTH}
+          onChange={(value) => updateField("textbookEdition", value, true)}
         />
 
         <select
           id="filter-category"
-          className={`${controlClassName} w-[110px]`}
+          className={buildSelectClassName(
+            COMPACT_SELECT_WIDTH,
+            !values.resourceCategory,
+          )}
           title="资料分类"
           value={values.resourceCategory ?? ""}
           onChange={(event) =>
@@ -151,7 +221,7 @@ export function LinkFilters({
             )
           }
         >
-          <option value="">分类：全部</option>
+          <option value="">分类</option>
           <option value="practice">练习</option>
           <option value="paper">试卷</option>
           <option value="special">专项</option>
@@ -159,7 +229,7 @@ export function LinkFilters({
 
         <select
           id="filter-platform"
-          className={`${controlClassName} w-[110px]`}
+          className={buildSelectClassName(PLATFORM_SELECT_WIDTH, !values.platform)}
           title="平台"
           value={values.platform ?? ""}
           onChange={(event) =>
@@ -170,14 +240,22 @@ export function LinkFilters({
             )
           }
         >
-          <option value="">平台：全部</option>
-          <option value="baidu">百度网盘</option>
-          <option value="quark">夸克网盘</option>
+          <option value="">平台</option>
+          {(Object.entries(LINK_PLATFORM_LABELS) as Array<[LinkPlatform, string]>).map(
+            ([value, label]) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ),
+          )}
         </select>
 
         <select
           id="filter-status"
-          className={`${controlClassName} w-[100px]`}
+          className={buildSelectClassName(
+            STATUS_SELECT_WIDTH,
+            values.status === "normal",
+          )}
           title="状态"
           value={values.status}
           onChange={(event) =>
@@ -195,7 +273,10 @@ export function LinkFilters({
 
         <select
           id="filter-favorite"
-          className={`${controlClassName} w-[100px]`}
+          className={buildSelectClassName(
+            FAVORITE_SELECT_WIDTH,
+            values.favorite === undefined,
+          )}
           title="收藏"
           value={
             values.favorite === undefined
@@ -213,7 +294,7 @@ export function LinkFilters({
             );
           }}
         >
-          <option value="">收藏：全部</option>
+          <option value="">收藏</option>
           <option value="true">仅收藏</option>
           <option value="false">未收藏</option>
         </select>

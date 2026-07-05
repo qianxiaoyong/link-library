@@ -1,16 +1,22 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   backupDatabase,
   batchUpdateLinks,
   createLink,
+  defaultLinkFilterOptions,
   deleteLink,
   downloadExportExcel,
+  fetchLinkFilterOptions,
+  fetchLinkFilters,
   getErrorMessage,
   getLink,
   listLinks,
+  saveLinkFilters,
   updateLink,
+  type LinkFilterOptions,
+  type LinkSavedFilters,
 } from "@/shared/api/links-client";
 import type {
   CreateResourceLinkInput,
@@ -40,7 +46,30 @@ import {
   openBackupDirectory,
 } from "@/shared/api/workspace-client";
 
-const PAGE_SIZE = 50;
+const PAGE_SIZE = 20;
+
+function toSavedFilters(filters: LinkFilterValues): LinkSavedFilters {
+  return {
+    platform: filters.platform,
+    status: filters.status,
+    favorite: filters.favorite,
+    resourceCategory: filters.resourceCategory,
+    schoolStage: filters.schoolStage,
+    grade: filters.grade,
+    semester: filters.semester,
+    subject: filters.subject,
+    resourceYear: filters.resourceYear,
+    textbookEdition: filters.textbookEdition,
+  };
+}
+
+function fromSavedFilters(saved: LinkSavedFilters): LinkFilterValues {
+  return {
+    ...defaultLinkFilterValues,
+    ...saved,
+    q: "",
+  };
+}
 
 function filtersToParams(
   filters: LinkFilterValues,
@@ -92,6 +121,8 @@ export function LinkLibraryPage({
   const [filters, setFilters] = useState<LinkFilterValues>(initialFilters);
   const [appliedFilters, setAppliedFilters] =
     useState<LinkFilterValues>(initialFilters);
+  const [filtersInitialized, setFiltersInitialized] = useState(false);
+  const skipNextPersistRef = useRef(false);
   const [offset, setOffset] = useState(0);
   const [items, setItems] = useState<ResourceLink[]>([]);
   const [total, setTotal] = useState(0);
@@ -116,6 +147,29 @@ export function LinkLibraryPage({
   const [deleteConfirmItem, setDeleteConfirmItem] =
     useState<ResourceLink | null>(null);
   const [deleteConfirming, setDeleteConfirming] = useState(false);
+  const [filterOptions, setFilterOptions] = useState<LinkFilterOptions>(
+    defaultLinkFilterOptions,
+  );
+
+  const loadFilterOptions = useCallback(async () => {
+    try {
+      const result = await fetchLinkFilterOptions();
+      setFilterOptions(result);
+    } catch (error) {
+      showToast(getErrorMessage(error), "error");
+    }
+  }, [showToast]);
+
+  const persistFilters = useCallback(
+    async (nextFilters: LinkFilterValues) => {
+      try {
+        await saveLinkFilters(toSavedFilters(nextFilters));
+      } catch (error) {
+        showToast(getErrorMessage(error), "error");
+      }
+    },
+    [showToast],
+  );
 
   const totalPages = useMemo(
     () => Math.max(1, Math.ceil(total / PAGE_SIZE)),
@@ -198,6 +252,33 @@ export function LinkLibraryPage({
   );
 
   useEffect(() => {
+    void loadFilterOptions();
+  }, [loadFilterOptions]);
+
+  useEffect(() => {
+    async function initializeFilters() {
+      try {
+        const saved = await fetchLinkFilters();
+        const restored = fromSavedFilters(saved);
+        skipNextPersistRef.current = true;
+        setFilters(restored);
+        setAppliedFilters(restored);
+        setOffset(0);
+      } catch (error) {
+        showToast(getErrorMessage(error), "error");
+      } finally {
+        setFiltersInitialized(true);
+      }
+    }
+
+    void initializeFilters();
+  }, [showToast]);
+
+  useEffect(() => {
+    if (!filtersInitialized) {
+      return;
+    }
+
     let active = true;
 
     async function loadInitial() {
@@ -222,7 +303,20 @@ export function LinkLibraryPage({
     return () => {
       active = false;
     };
-  }, [appliedFilters, offset, showToast]);
+  }, [appliedFilters, offset, showToast, filtersInitialized]);
+
+  useEffect(() => {
+    if (!filtersInitialized) {
+      return;
+    }
+
+    if (skipNextPersistRef.current) {
+      skipNextPersistRef.current = false;
+      return;
+    }
+
+    void persistFilters(appliedFilters);
+  }, [appliedFilters, filtersInitialized, persistFilters]);
 
   function applyFilters(nextFilters: LinkFilterValues, resetOffset = true) {
     if (resetOffset) setOffset(0);
@@ -595,6 +689,7 @@ export function LinkLibraryPage({
       <div className="flex min-h-0 flex-1 flex-col gap-2 px-4 py-2">
         <LinkFilters
           values={filters}
+          options={filterOptions}
           onChange={setFilters}
           onSearch={handleSearch}
           onReset={handleResetFilters}
@@ -631,7 +726,7 @@ export function LinkLibraryPage({
             ) : null}
 
             <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-zinc-200 bg-white">
-              {loading ? (
+              {loading || !filtersInitialized ? (
                 <div className="flex h-full items-center justify-center text-sm text-zinc-600">
                   加载中...
                 </div>

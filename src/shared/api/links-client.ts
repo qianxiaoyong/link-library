@@ -43,6 +43,37 @@ export type ListLinksResponse = {
   offset: number;
 };
 
+export type LinkFilterOptions = {
+  resourceYears: string[];
+  semesters: string[];
+  schoolStages: string[];
+  subjects: string[];
+  grades: string[];
+  textbookEditions: string[];
+};
+
+export const defaultLinkFilterOptions: LinkFilterOptions = {
+  resourceYears: [],
+  semesters: [],
+  schoolStages: [],
+  subjects: [],
+  grades: [],
+  textbookEditions: [],
+};
+
+export type LinkSavedFilters = {
+  platform?: LinkPlatform;
+  status: LinkStatus | "all";
+  favorite?: boolean;
+  resourceCategory?: ResourceCategory;
+  schoolStage: string;
+  grade: string;
+  semester: string;
+  subject: string;
+  resourceYear: string;
+  textbookEdition: string;
+};
+
 export type ImportDefaultsInput = {
   resourceCategory?: ResourceCategory | null;
   description?: string | null;
@@ -233,6 +264,23 @@ export async function listLinks(
   });
 
   return requestApi<ListLinksResponse>(`/api/links${query}`);
+}
+
+export async function fetchLinkFilterOptions(): Promise<LinkFilterOptions> {
+  return requestApi<LinkFilterOptions>("/api/links/filter-options");
+}
+
+export async function fetchLinkFilters(): Promise<LinkSavedFilters> {
+  return requestApi<LinkSavedFilters>("/api/links/filters");
+}
+
+export async function saveLinkFilters(
+  filters: LinkSavedFilters,
+): Promise<LinkSavedFilters> {
+  return requestApi<LinkSavedFilters>("/api/links/filters", {
+    method: "PUT",
+    body: JSON.stringify(filters),
+  });
 }
 
 export async function getLink(id: string): Promise<ResourceLink> {

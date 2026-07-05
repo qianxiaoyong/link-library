@@ -231,12 +231,10 @@ function DetailSelectInput<T extends string>({
 function DetailMoreMenu({
   item,
   onEdit,
-  onToggleFavorite,
   onToggleStatus,
 }: {
   item: ResourceLink;
   onEdit: (item: ResourceLink) => void;
-  onToggleFavorite: (item: ResourceLink) => void;
   onToggleStatus: (item: ResourceLink) => void;
 }) {
   const [open, setOpen] = useState(false);
@@ -276,16 +274,6 @@ function DetailMoreMenu({
             }}
           >
             完整编辑
-          </button>
-          <button
-            type="button"
-            className="block w-full px-3 py-1.5 text-left text-xs text-zinc-800 hover:bg-zinc-50"
-            onClick={() => {
-              setOpen(false);
-              onToggleFavorite(item);
-            }}
-          >
-            {item.favorite ? "取消收藏" : "收藏"}
           </button>
           <button
             type="button"
@@ -397,6 +385,17 @@ function LinkDetailPanelContent({
           <div className="flex flex-wrap gap-1.5">
             <button
               type="button"
+              className={`rounded border px-2 py-1 text-xs hover:bg-zinc-50 ${
+                item.favorite
+                  ? "border-amber-300 text-amber-800 hover:bg-amber-50"
+                  : "border-zinc-300 text-zinc-700"
+              }`}
+              onClick={() => onToggleFavorite(item)}
+            >
+              {item.favorite ? "取消收藏" : "收藏"}
+            </button>
+            <button
+              type="button"
               className="rounded border border-zinc-300 px-2 py-1 text-xs hover:bg-zinc-50"
               onClick={() => void handleCopySourceText()}
             >
@@ -413,7 +412,6 @@ function LinkDetailPanelContent({
           <DetailMoreMenu
             item={item}
             onEdit={onEdit}
-            onToggleFavorite={onToggleFavorite}
             onToggleStatus={onToggleStatus}
           />
         </div>
