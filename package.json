@@ -22,6 +22,7 @@
     "grade-display:test": "tsx scripts/test-grade-display.ts",
     "coverage-matrix:test": "tsx scripts/test-coverage-matrix.ts",
     "coverage-matrix:export:test": "tsx scripts/test-coverage-matrix-export.ts",
+    "coverage-matrix:notes:test": "tsx scripts/test-coverage-matrix-notes.ts",
     "electron:dev": "cross-env ELECTRON_DEV=1 electron electron/main.cjs",
     "electron:prepare": "npm run build && node scripts/prepare-electron-standalone.cjs && node scripts/rebuild-native-for-electron.cjs",
     "electron:start": "cross-env ELECTRON_USE_STANDALONE=1 electron electron/main.cjs",

@@ -1,13 +1,22 @@
-import Link from "next/link";
+"use client";
+
 import type { ReactNode } from "react";
 import type { CoverageMatrixResponse } from "@/shared/api/coverage-matrix-client";
 import type { MatrixDrillDownFilters } from "@/shared/library/deep-link-filters";
-import { buildMatrixCellDeepLink } from "@/shared/library/deep-link-filters";
+import { buildMatrixCellNoteKey } from "@/shared/stats/coverage-matrix/cell-note-key";
+import type { MatrixCellNoteIdentity } from "@/shared/stats/coverage-matrix/cell-note-key";
+import { MatrixCell } from "./MatrixCell";
 
 type CoverageMatrixTableProps = {
   data: CoverageMatrixResponse | null;
   loading: boolean;
   drillDownFilters: MatrixDrillDownFilters;
+  notes: Record<string, string>;
+  onOpenNote: (payload: {
+    identity: MatrixCellNoteIdentity;
+    anchorRect: DOMRect;
+    columnLabel: string;
+  }) => void;
 };
 
 const CELL_CLASS = "border border-zinc-200 px-2 py-1.5 text-center text-xs";
@@ -15,6 +24,8 @@ const CELL_CLASS = "border border-zinc-200 px-2 py-1.5 text-center text-xs";
 function renderBodyRows(
   data: CoverageMatrixResponse,
   drillDownFilters: MatrixDrillDownFilters,
+  notes: Record<string, string>,
+  onOpenNote: CoverageMatrixTableProps["onOpenNote"],
 ) {
   const elements: ReactNode[] = [];
   let previousCategoryLabel: string | null = null;
@@ -35,7 +46,10 @@ function renderBodyRows(
     }
 
     elements.push(
-      <tr key={`${row.resourceCategory ?? "none"}-${row.bookTitle}`} className="hover:bg-zinc-50">
+      <tr
+        key={`${row.resourceCategory ?? "none"}-${row.bookTitle}`}
+        className="hover:bg-zinc-50"
+      >
         <td
           className={`${CELL_CLASS} sticky left-0 z-10 bg-white text-left font-medium text-zinc-900`}
           title={row.bookTitle}
@@ -43,38 +57,28 @@ function renderBodyRows(
           {row.bookTitle}
         </td>
         {data.columns.map((column) => {
-          const cell = row.cells[column.key];
-          if (!cell) {
-            return (
-              <td
-                key={column.key}
-                className={`${CELL_CLASS} text-zinc-300`}
-              >
-                —
-              </td>
-            );
-          }
-
-          const href = buildMatrixCellDeepLink(
-            drillDownFilters,
-            row.bookTitle,
-            {
-              subject: column.subject,
-              textbookEdition: column.textbookEdition,
-            },
-            row.resourceCategory,
-          );
+          const noteKey = buildMatrixCellNoteKey({
+            bookTitle: row.bookTitle,
+            resourceCategory: row.resourceCategory,
+            subject: column.subject,
+            textbookEdition: column.textbookEdition,
+          });
+          const note = notes[noteKey];
+          const hasNote = Boolean(note?.trim());
+          const notePreview = hasNote ? note : undefined;
 
           return (
-            <td key={column.key} className={CELL_CLASS}>
-              <Link
-                href={href}
-                className="text-blue-600 hover:text-blue-800 hover:underline"
-                title={`查看 ${row.bookTitle} · ${column.label}`}
-              >
-                {cell.gradeCoverage}
-              </Link>
-            </td>
+            <MatrixCell
+              key={column.key}
+              bookTitle={row.bookTitle}
+              resourceCategory={row.resourceCategory}
+              column={column}
+              cell={row.cells[column.key]}
+              hasNote={hasNote}
+              notePreview={notePreview}
+              drillDownFilters={drillDownFilters}
+              onOpenNote={onOpenNote}
+            />
           );
         })}
       </tr>,
@@ -88,6 +92,8 @@ export function CoverageMatrixTable({
   data,
   loading,
   drillDownFilters,
+  notes,
+  onOpenNote,
 }: CoverageMatrixTableProps) {
   if (loading) {
     return (
@@ -126,7 +132,9 @@ export function CoverageMatrixTable({
             ))}
           </tr>
         </thead>
-        <tbody>{renderBodyRows(data, drillDownFilters)}</tbody>
+        <tbody>
+          {renderBodyRows(data, drillDownFilters, notes, onOpenNote)}
+        </tbody>
       </table>
     </div>
   );

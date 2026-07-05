@@ -70,6 +70,19 @@ BEGIN
 END;
 `;
 
+const CREATE_COVERAGE_MATRIX_CELL_NOTES_TABLE = `
+CREATE TABLE IF NOT EXISTS coverage_matrix_cell_notes (
+  book_title TEXT NOT NULL,
+  resource_category TEXT NOT NULL DEFAULT '',
+  subject TEXT NOT NULL,
+  textbook_edition TEXT NOT NULL,
+  note TEXT NOT NULL DEFAULT '',
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (book_title, resource_category, subject, textbook_edition)
+);
+`;
+
 function migrateSchema(db: Database.Database): void {
   const columns = db
     .prepare(`PRAGMA table_info(resource_links)`)
@@ -92,7 +105,7 @@ function seedAppMeta(db: Database.Database): void {
       updated_at = CURRENT_TIMESTAMP
   `);
 
-  upsertMeta.run({ key: "schema_version", value: "2" });
+  upsertMeta.run({ key: "schema_version", value: "3" });
   upsertMeta.run({ key: "app_name", value: "学习资料链接库" });
 }
 
@@ -107,5 +120,6 @@ export function initLinkDatabase(db: Database.Database): void {
   }
 
   db.exec(CREATE_UPDATED_AT_TRIGGER);
+  db.exec(CREATE_COVERAGE_MATRIX_CELL_NOTES_TABLE);
   seedAppMeta(db);
 }
