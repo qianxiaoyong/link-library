@@ -44,6 +44,7 @@ function main(): void {
       q: "一本预备",
       resourceYear: "2026",
       semester: undefined,
+      schoolStage: undefined,
       subject: "数学",
       textbookEdition: "北师",
       resourceCategory: "practice",

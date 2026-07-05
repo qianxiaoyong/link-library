@@ -5,9 +5,26 @@ import type { CoverageMatrixResult } from "@/shared/stats/coverage-matrix";
 export type CoverageMatrixParams = {
   resourceYear?: string;
   semester?: string;
+  schoolStage?: string;
   subject?: string;
   textbookEdition?: string;
   resourceCategory?: ResourceCategory;
+};
+
+export type CoverageMatrixFilterOptions = {
+  resourceYears: string[];
+  semesters: string[];
+  schoolStages: string[];
+  subjects: string[];
+  textbookEditions: string[];
+};
+
+export const defaultCoverageMatrixFilterOptions: CoverageMatrixFilterOptions = {
+  resourceYears: [],
+  semesters: [],
+  schoolStages: [],
+  subjects: [],
+  textbookEditions: [],
 };
 
 export type CoverageMatrixResponse = CoverageMatrixResult;
@@ -67,6 +84,9 @@ function buildCoverageMatrixQueryString(
   if (params.semester?.trim()) {
     searchParams.set("semester", params.semester.trim());
   }
+  if (params.schoolStage?.trim()) {
+    searchParams.set("schoolStage", params.schoolStage.trim());
+  }
   if (params.subject?.trim()) {
     searchParams.set("subject", params.subject.trim());
   }
@@ -116,5 +136,11 @@ export async function fetchCoverageMatrix(
   const query = buildCoverageMatrixQueryString(params);
   return requestCoverageMatrixApi<CoverageMatrixResponse>(
     `/api/stats/coverage-matrix${query}`,
+  );
+}
+
+export async function fetchCoverageMatrixFilterOptions(): Promise<CoverageMatrixFilterOptions> {
+  return requestCoverageMatrixApi<CoverageMatrixFilterOptions>(
+    "/api/stats/coverage-matrix/filter-options",
   );
 }

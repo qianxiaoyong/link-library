@@ -20,6 +20,11 @@ function buildCoverageMatrixWhereClause(filters: CoverageMatrixQuery): {
     params.push(filters.semester);
   }
 
+  if (filters.schoolStage) {
+    conditions.push("school_stage = ?");
+    params.push(filters.schoolStage);
+  }
+
   if (filters.subject) {
     conditions.push("subject = ?");
     params.push(filters.subject);
@@ -68,4 +73,38 @@ export function listCoverageMatrixRows(
     subject: row.subject,
     textbookEdition: row.textbook_edition,
   }));
+}
+
+export type CoverageMatrixFilterOptions = {
+  resourceYears: string[];
+  semesters: string[];
+  schoolStages: string[];
+  subjects: string[];
+  textbookEditions: string[];
+};
+
+function listDistinctFieldValues(field: string): string[] {
+  const db = getLinkDatabase();
+  const rows = db
+    .prepare(
+      `SELECT DISTINCT ${field} AS value
+       FROM resource_links
+       WHERE status = 'normal'
+         AND ${field} IS NOT NULL
+         AND TRIM(${field}) != ''
+       ORDER BY ${field} COLLATE NOCASE ASC`,
+    )
+    .all() as Array<{ value: string }>;
+
+  return rows.map((row) => row.value.trim());
+}
+
+export function listCoverageMatrixFilterOptions(): CoverageMatrixFilterOptions {
+  return {
+    resourceYears: listDistinctFieldValues("resource_year"),
+    semesters: listDistinctFieldValues("semester"),
+    schoolStages: listDistinctFieldValues("school_stage"),
+    subjects: listDistinctFieldValues("subject"),
+    textbookEditions: listDistinctFieldValues("textbook_edition"),
+  };
 }

@@ -13,9 +13,12 @@ import {
   useStatsToast,
 } from "../use-stats-toast";
 import {
+  defaultCoverageMatrixFilterOptions,
   downloadCoverageMatrixExcel,
   fetchCoverageMatrix,
+  fetchCoverageMatrixFilterOptions,
   getCoverageMatrixErrorMessage,
+  type CoverageMatrixFilterOptions,
   type CoverageMatrixResponse,
 } from "@/shared/api/coverage-matrix-client";
 import {
@@ -41,6 +44,7 @@ function filtersToParams(
   return {
     resourceYear: filters.resourceYear || undefined,
     semester: filters.semester || undefined,
+    schoolStage: filters.schoolStage || undefined,
     subject: filters.subject || undefined,
     textbookEdition: filters.textbookEdition || undefined,
     resourceCategory: filters.resourceCategory || undefined,
@@ -56,11 +60,23 @@ export function CoverageMatrixPage() {
     defaultMatrixFilterValues,
   );
   const [data, setData] = useState<CoverageMatrixResponse | null>(null);
+  const [filterOptions, setFilterOptions] = useState<CoverageMatrixFilterOptions>(
+    defaultCoverageMatrixFilterOptions,
+  );
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [notePopover, setNotePopover] = useState<NotePopoverState | null>(null);
   const [noteSaving, setNoteSaving] = useState(false);
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
+
+  const loadFilterOptions = useCallback(async () => {
+    try {
+      const result = await fetchCoverageMatrixFilterOptions();
+      setFilterOptions(result);
+    } catch (error) {
+      showToast(getCoverageMatrixErrorMessage(error), "error");
+    }
+  }, [showToast]);
 
   const loadNotes = useCallback(async () => {
     try {
@@ -90,6 +106,10 @@ export function CoverageMatrixPage() {
   useEffect(() => {
     void loadMatrix(appliedFilters);
   }, [appliedFilters, loadMatrix]);
+
+  useEffect(() => {
+    void loadFilterOptions();
+  }, [loadFilterOptions]);
 
   useEffect(() => {
     void loadNotes();
@@ -170,6 +190,7 @@ export function CoverageMatrixPage() {
         <div className="flex shrink-0 flex-wrap items-center gap-2">
           <MatrixFilters
             values={filters}
+            options={filterOptions}
             onChange={setFilters}
             onSearch={handleSearch}
             onReset={handleReset}

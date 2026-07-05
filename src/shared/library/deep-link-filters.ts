@@ -4,6 +4,7 @@ export type LinksDeepLinkParams = {
   q?: string;
   resourceYear?: string;
   semester?: string;
+  schoolStage?: string;
   subject?: string;
   textbookEdition?: string;
   resourceCategory?: ResourceCategory;
@@ -12,6 +13,7 @@ export type LinksDeepLinkParams = {
 export type StatsDrillDownFilters = {
   resourceYear?: string;
   semester?: string;
+  schoolStage?: string;
   subject?: string;
   textbookEdition?: string;
   resourceCategory?: ResourceCategory | "";
@@ -55,6 +57,9 @@ export function encodeLinksDeepLinkParams(
   if (params.semester?.trim()) {
     searchParams.set("semester", params.semester.trim());
   }
+  if (params.schoolStage?.trim()) {
+    searchParams.set("schoolStage", params.schoolStage.trim());
+  }
   if (params.subject?.trim()) {
     searchParams.set("subject", params.subject.trim());
   }
@@ -75,6 +80,7 @@ export function decodeLinksDeepLinkParams(
     q: searchParams.get("q")?.trim() || undefined,
     resourceYear: searchParams.get("resourceYear")?.trim() || undefined,
     semester: searchParams.get("semester")?.trim() || undefined,
+    schoolStage: searchParams.get("schoolStage")?.trim() || undefined,
     subject: searchParams.get("subject")?.trim() || undefined,
     textbookEdition: searchParams.get("textbookEdition")?.trim() || undefined,
     resourceCategory: parseResourceCategory(
@@ -104,6 +110,7 @@ export function buildStatsBookTitleDeepLink(
     q: bookTitle,
     resourceYear: normalizeDeepLinkField(statsFilters.resourceYear),
     semester: normalizeDeepLinkField(statsFilters.semester),
+    schoolStage: normalizeDeepLinkField(statsFilters.schoolStage),
     subject: normalizeDeepLinkField(statsFilters.subject),
     textbookEdition: normalizeDeepLinkField(statsFilters.textbookEdition),
     resourceCategory: statsFilters.resourceCategory || undefined,
@@ -120,6 +127,7 @@ export function buildMatrixCellDeepLink(
     q: bookTitle,
     resourceYear: normalizeDeepLinkField(filters.resourceYear),
     semester: normalizeDeepLinkField(filters.semester),
+    schoolStage: normalizeDeepLinkField(filters.schoolStage),
     subject: normalizeDeepLinkField(column.subject),
     textbookEdition: normalizeDeepLinkField(column.textbookEdition),
     resourceCategory:

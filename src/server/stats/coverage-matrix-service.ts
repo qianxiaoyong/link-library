@@ -1,4 +1,8 @@
-import { listCoverageMatrixRows } from "@/server/stats/coverage-matrix-repository";
+import {
+  listCoverageMatrixFilterOptions,
+  listCoverageMatrixRows,
+  type CoverageMatrixFilterOptions,
+} from "@/server/stats/coverage-matrix-repository";
 import type { CoverageMatrixQuery } from "@/server/validation/coverage-matrix-schemas";
 import {
   buildCoverageMatrix,
@@ -10,4 +14,8 @@ export function getCoverageMatrix(
 ): CoverageMatrixResult {
   const rows = listCoverageMatrixRows(filters);
   return buildCoverageMatrix(rows);
+}
+
+export function getCoverageMatrixFilterOptions(): CoverageMatrixFilterOptions {
+  return listCoverageMatrixFilterOptions();
 }

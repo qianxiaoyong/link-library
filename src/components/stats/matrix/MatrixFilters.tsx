@@ -1,8 +1,10 @@
+import type { CoverageMatrixFilterOptions } from "@/shared/api/coverage-matrix-client";
 import type { ResourceCategory } from "@/shared/types/resource-link";
 
 export type MatrixFilterValues = {
   resourceYear: string;
   semester: string;
+  schoolStage: string;
   subject: string;
   textbookEdition: string;
   resourceCategory: ResourceCategory | "";
@@ -11,6 +13,7 @@ export type MatrixFilterValues = {
 export const defaultMatrixFilterValues: MatrixFilterValues = {
   resourceYear: "",
   semester: "",
+  schoolStage: "",
   subject: "",
   textbookEdition: "",
   resourceCategory: "",
@@ -21,13 +24,59 @@ const controlClassName =
 
 type MatrixFiltersProps = {
   values: MatrixFilterValues;
+  options: CoverageMatrixFilterOptions;
   onChange: (values: MatrixFilterValues) => void;
   onSearch: () => void;
   onReset: () => void;
 };
 
+function withSelectedOption(options: string[], selected: string): string[] {
+  if (!selected || options.includes(selected)) {
+    return options;
+  }
+  return [selected, ...options];
+}
+
+type FilterSelectProps = {
+  id: string;
+  label: string;
+  value: string;
+  options: string[];
+  widthClassName: string;
+  onChange: (value: string) => void;
+};
+
+function FilterSelect({
+  id,
+  label,
+  value,
+  options,
+  widthClassName,
+  onChange,
+}: FilterSelectProps) {
+  const mergedOptions = withSelectedOption(options, value);
+
+  return (
+    <select
+      id={id}
+      className={`${controlClassName} ${widthClassName}`}
+      title={label}
+      value={value}
+      onChange={(event) => onChange(event.target.value)}
+    >
+      <option value="">{label}：全部</option>
+      {mergedOptions.map((option) => (
+        <option key={option} value={option}>
+          {option}
+        </option>
+      ))}
+    </select>
+  );
+}
+
 export function MatrixFilters({
   values,
+  options,
   onChange,
   onSearch,
   onReset,
@@ -39,53 +88,52 @@ export function MatrixFilters({
     onChange({ ...values, [key]: value });
   }
 
-  function handleTextKeyDown(event: React.KeyboardEvent) {
-    if (event.key === "Enter") {
-      onSearch();
-    }
-  }
-
   return (
     <section className="shrink-0 rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2.5">
       <div className="flex min-h-[36px] items-center gap-2 overflow-x-auto">
-        <input
+        <FilterSelect
           id="matrix-filter-resource-year"
-          className={`${controlClassName} w-[120px]`}
-          placeholder="资料年份"
+          label="资料年份"
           value={values.resourceYear}
-          onChange={(event) =>
-            updateField("resourceYear", event.target.value)
-          }
-          onKeyDown={handleTextKeyDown}
+          options={options.resourceYears}
+          widthClassName="w-[120px]"
+          onChange={(value) => updateField("resourceYear", value)}
         />
 
-        <input
+        <FilterSelect
           id="matrix-filter-semester"
-          className={`${controlClassName} w-[100px]`}
-          placeholder="学期"
+          label="学期"
           value={values.semester}
-          onChange={(event) => updateField("semester", event.target.value)}
-          onKeyDown={handleTextKeyDown}
+          options={options.semesters}
+          widthClassName="w-[100px]"
+          onChange={(value) => updateField("semester", value)}
         />
 
-        <input
+        <FilterSelect
+          id="matrix-filter-school-stage"
+          label="学段"
+          value={values.schoolStage}
+          options={options.schoolStages}
+          widthClassName="w-[100px]"
+          onChange={(value) => updateField("schoolStage", value)}
+        />
+
+        <FilterSelect
           id="matrix-filter-subject"
-          className={`${controlClassName} w-[110px]`}
-          placeholder="科目"
+          label="科目"
           value={values.subject}
-          onChange={(event) => updateField("subject", event.target.value)}
-          onKeyDown={handleTextKeyDown}
+          options={options.subjects}
+          widthClassName="w-[110px]"
+          onChange={(value) => updateField("subject", value)}
         />
 
-        <input
+        <FilterSelect
           id="matrix-filter-textbook-edition"
-          className={`${controlClassName} w-[110px]`}
-          placeholder="教材版本"
+          label="教材版本"
           value={values.textbookEdition}
-          onChange={(event) =>
-            updateField("textbookEdition", event.target.value)
-          }
-          onKeyDown={handleTextKeyDown}
+          options={options.textbookEditions}
+          widthClassName="w-[110px]"
+          onChange={(value) => updateField("textbookEdition", value)}
         />
 
         <select
