@@ -47,6 +47,14 @@ function removeDevWorkspaceCopy() {
   }
 }
 
+function removeNestedPackagingArtifacts() {
+  const releaseDir = path.join(standaloneDir, "release");
+  if (fs.existsSync(releaseDir)) {
+    fs.rmSync(releaseDir, { recursive: true, force: true });
+    console.log("已移除 standalone 中误打包的 release 目录。");
+  }
+}
+
 function patchAbsolutePaths() {
   const variants = new Set([
     root,
@@ -140,6 +148,7 @@ if (fs.existsSync(publicSrc)) {
 }
 
 removeDevWorkspaceCopy();
+removeNestedPackagingArtifacts();
 patchAbsolutePaths();
 ensureBetterSqliteAlias();
 patchBetterSqliteRequires();

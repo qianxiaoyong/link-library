@@ -5,7 +5,7 @@ const nextConfig: NextConfig = {
   output: "standalone",
   outputFileTracingRoot: path.join(__dirname),
   outputFileTracingExcludes: {
-    "*": ["./_workspace/**/*"],
+    "*": ["./_workspace/**/*", "./release/**/*"],
   },
   serverExternalPackages: ["better-sqlite3", "exceljs"],
   devIndicators: false,

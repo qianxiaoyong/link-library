@@ -20,6 +20,8 @@ type CoverageMatrixTableProps = {
 };
 
 const CELL_CLASS = "border border-zinc-200 px-2 py-1.5 text-center text-xs";
+const STICKY_BOOK_TITLE_CLASS = `${CELL_CLASS} sticky left-0 z-10 bg-white text-left font-medium text-zinc-900 shadow-[inset_-1px_0_0_#e4e4e7]`;
+const STICKY_HEADER_CLASS = `${CELL_CLASS} sticky left-0 z-30 min-w-[160px] bg-zinc-50 text-left font-medium text-zinc-700 shadow-[inset_-1px_0_0_#e4e4e7]`;
 
 function renderBodyRows(
   data: CoverageMatrixResponse,
@@ -46,12 +48,9 @@ function renderBodyRows(
     }
 
     elements.push(
-      <tr
-        key={`${row.resourceCategory ?? "none"}-${row.bookTitle}`}
-        className="hover:bg-zinc-50"
-      >
+      <tr key={`${row.resourceCategory ?? "none"}-${row.bookTitle}`}>
         <td
-          className={`${CELL_CLASS} sticky left-0 z-10 bg-white text-left font-medium text-zinc-900`}
+          className={`${STICKY_BOOK_TITLE_CLASS} hover:bg-zinc-50`}
           title={row.bookTitle}
         >
           {row.bookTitle}
@@ -113,14 +112,10 @@ export function CoverageMatrixTable({
 
   return (
     <div className="min-h-0 flex-1 overflow-auto rounded-lg border border-zinc-200 bg-white">
-      <table className="min-w-full border-collapse text-left">
+      <table className="min-w-full border-separate border-spacing-0 text-left">
         <thead className="sticky top-0 z-20 bg-zinc-50">
           <tr>
-            <th
-              className={`${CELL_CLASS} sticky left-0 z-30 min-w-[160px] bg-zinc-50 text-left font-medium text-zinc-700`}
-            >
-              书名号
-            </th>
+            <th className={STICKY_HEADER_CLASS}>书名号</th>
             {data.columns.map((column) => (
               <th
                 key={column.key}

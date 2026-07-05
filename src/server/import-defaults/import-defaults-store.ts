@@ -6,9 +6,6 @@ import {
   type ImportDefaultsConfigBody,
 } from "@/server/validation/resource-link-schemas";
 
-const CONFIG_DIR = getLinkLibraryWorkspaceDir();
-const CONFIG_PATH = path.join(CONFIG_DIR, "import-defaults.json");
-
 export const defaultImportDefaultsConfig: ImportDefaultsConfigBody = {
   title: "",
   resourceCategory: "",
@@ -23,17 +20,26 @@ export const defaultImportDefaultsConfig: ImportDefaultsConfigBody = {
   favorite: false,
 };
 
+function getConfigDir(): string {
+  return getLinkLibraryWorkspaceDir();
+}
+
+function getConfigPath(): string {
+  return path.join(getConfigDir(), "import-defaults.json");
+}
+
 export function getImportDefaultsConfigPath(): string {
-  return CONFIG_PATH;
+  return getConfigPath();
 }
 
 export function readImportDefaultsConfig(): ImportDefaultsConfigBody {
-  if (!fs.existsSync(CONFIG_PATH)) {
+  const configPath = getConfigPath();
+  if (!fs.existsSync(configPath)) {
     return { ...defaultImportDefaultsConfig };
   }
 
   try {
-    const raw = fs.readFileSync(CONFIG_PATH, "utf-8");
+    const raw = fs.readFileSync(configPath, "utf-8");
     const parsed = importDefaultsConfigSchema.safeParse(JSON.parse(raw));
     if (parsed.success) {
       return parsed.data;
@@ -50,9 +56,9 @@ export function writeImportDefaultsConfig(
 ): ImportDefaultsConfigBody {
   const parsed = importDefaultsConfigSchema.parse(config);
 
-  fs.mkdirSync(CONFIG_DIR, { recursive: true });
+  fs.mkdirSync(getConfigDir(), { recursive: true });
   fs.writeFileSync(
-    CONFIG_PATH,
+    getConfigPath(),
     `${JSON.stringify(parsed, null, 2)}\n`,
     "utf-8",
   );

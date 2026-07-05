@@ -143,7 +143,7 @@ function createLoadingWindow() {
 }
 
 async function startServer() {
-  const dataDir = getDataDir();
+  const dataDir = path.resolve(getDataDir());
   fs.mkdirSync(dataDir, { recursive: true });
   writeLog(`数据目录: ${dataDir}`);
 

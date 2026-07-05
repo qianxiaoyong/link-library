@@ -3,8 +3,6 @@ import path from "node:path";
 import { getLinkLibraryWorkspaceDir } from "@/server/config/workspace-path";
 import { getLinkDatabase, getLinkDatabasePath } from "@/server/db/link-db";
 
-const BACKUP_DIR = path.join(getLinkLibraryWorkspaceDir(), "backups");
-
 function formatTimestamp(date = new Date()): string {
   const pad = (value: number) => String(value).padStart(2, "0");
   return (
@@ -14,7 +12,7 @@ function formatTimestamp(date = new Date()): string {
 }
 
 export function getBackupDirectory(): string {
-  return BACKUP_DIR;
+  return path.join(getLinkLibraryWorkspaceDir(), "backups");
 }
 
 export function getBackupRelativePath(fileName: string): string {
@@ -34,10 +32,11 @@ export function backupLinkDatabase(): BackupDatabaseResult {
 
   const createdAt = new Date().toISOString();
   const fileName = `link-library-backup-${formatTimestamp(new Date(createdAt))}.db`;
+  const backupDir = getBackupDirectory();
 
-  fs.mkdirSync(BACKUP_DIR, { recursive: true });
+  fs.mkdirSync(backupDir, { recursive: true });
 
-  const backupPath = path.join(BACKUP_DIR, fileName);
+  const backupPath = path.join(backupDir, fileName);
   fs.copyFileSync(getLinkDatabasePath(), backupPath);
 
   return {
