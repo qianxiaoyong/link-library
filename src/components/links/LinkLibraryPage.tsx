@@ -71,6 +71,24 @@ function fromSavedFilters(saved: LinkSavedFilters): LinkFilterValues {
   };
 }
 
+function hasDeepLinkFilters(filters: LinkFilterValues): boolean {
+  const defaults = defaultLinkFilterValues;
+
+  return (
+    filters.q !== defaults.q ||
+    filters.platform !== defaults.platform ||
+    filters.status !== defaults.status ||
+    filters.favorite !== defaults.favorite ||
+    filters.resourceCategory !== defaults.resourceCategory ||
+    filters.schoolStage !== defaults.schoolStage ||
+    filters.grade !== defaults.grade ||
+    filters.semester !== defaults.semester ||
+    filters.subject !== defaults.subject ||
+    filters.resourceYear !== defaults.resourceYear ||
+    filters.textbookEdition !== defaults.textbookEdition
+  );
+}
+
 function filtersToParams(
   filters: LinkFilterValues,
   pageOffset: number,
@@ -258,9 +276,18 @@ export function LinkLibraryPage({
   useEffect(() => {
     async function initializeFilters() {
       try {
+        skipNextPersistRef.current = true;
+
+        if (hasDeepLinkFilters(initialFilters)) {
+          setFilters(initialFilters);
+          setAppliedFilters(initialFilters);
+          setOffset(0);
+          setFiltersInitialized(true);
+          return;
+        }
+
         const saved = await fetchLinkFilters();
         const restored = fromSavedFilters(saved);
-        skipNextPersistRef.current = true;
         setFilters(restored);
         setAppliedFilters(restored);
         setOffset(0);
@@ -272,7 +299,7 @@ export function LinkLibraryPage({
     }
 
     void initializeFilters();
-  }, [showToast]);
+  }, [initialFilters, showToast]);
 
   useEffect(() => {
     if (!filtersInitialized) {
