@@ -21,6 +21,7 @@ type MatrixCellProps = {
   cell: CoverageMatrixCell | undefined;
   hasNote: boolean;
   notePreview: string | undefined;
+  isRowSelected?: boolean;
   drillDownFilters: MatrixDrillDownFilters;
   onOpenNote: (payload: {
     identity: MatrixCellNoteIdentity;
@@ -60,12 +61,15 @@ export function MatrixCell({
   cell,
   hasNote,
   notePreview,
+  isRowSelected = false,
   drillDownFilters,
   onOpenNote,
 }: MatrixCellProps) {
-  const noteClassName = hasNote
-    ? "relative bg-amber-50/80 hover:bg-amber-100/80"
-    : "hover:bg-zinc-50";
+  const noteClassName = isRowSelected
+    ? "relative bg-blue-50 hover:bg-blue-100"
+    : hasNote
+      ? "relative bg-amber-50/80 hover:bg-amber-100/80"
+      : "hover:bg-zinc-50";
 
   function handleClick(event: React.MouseEvent<HTMLTableCellElement>) {
     openNoteFromCell(event, {
