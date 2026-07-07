@@ -37,6 +37,12 @@ import { LinkDetailPanel } from "./LinkDetailPanel";
 import { LinkFormDialog, type LinkFormMode } from "./LinkFormDialog";
 import { LinkImportDialog } from "./LinkImportDialog";
 import { LinkTable } from "./LinkTable";
+import {
+  DEFAULT_PAGE_SIZE,
+  getDisplayRange,
+  type PageSizeOption,
+} from "./link-pagination-utils";
+import { LinkPagination } from "./LinkPagination";
 import { itemMatchesFilters } from "./link-filter-utils";
 import { copyToClipboard } from "./link-ui-utils";
 import { getToastClassName, usePageToast } from "./use-page-toast";
@@ -46,7 +52,7 @@ import {
   openBackupDirectory,
 } from "@/shared/api/workspace-client";
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = DEFAULT_PAGE_SIZE;
 
 function toSavedFilters(filters: LinkFilterValues): LinkSavedFilters {
   return {
@@ -92,6 +98,7 @@ function hasDeepLinkFilters(filters: LinkFilterValues): boolean {
 function filtersToParams(
   filters: LinkFilterValues,
   pageOffset: number,
+  pageSize: number = PAGE_SIZE,
 ): Parameters<typeof listLinks>[0] {
   return {
     q: filters.q || undefined,
@@ -105,7 +112,7 @@ function filtersToParams(
     subject: filters.subject || undefined,
     resourceYear: filters.resourceYear || undefined,
     textbookEdition: filters.textbookEdition || undefined,
-    limit: PAGE_SIZE,
+    limit: pageSize,
     offset: pageOffset,
   };
 }
@@ -142,6 +149,7 @@ export function LinkLibraryPage({
   const [filtersInitialized, setFiltersInitialized] = useState(false);
   const skipNextPersistRef = useRef(false);
   const [offset, setOffset] = useState(0);
+  const [pageSize, setPageSize] = useState<PageSizeOption>(DEFAULT_PAGE_SIZE);
   const [items, setItems] = useState<ResourceLink[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -189,13 +197,9 @@ export function LinkLibraryPage({
     [showToast],
   );
 
-  const totalPages = useMemo(
-    () => Math.max(1, Math.ceil(total / PAGE_SIZE)),
-    [total],
-  );
-  const currentPage = useMemo(
-    () => Math.floor(offset / PAGE_SIZE) + 1,
-    [offset],
+  const displayRange = useMemo(
+    () => getDisplayRange(total, offset, pageSize),
+    [total, offset, pageSize],
   );
 
   const refreshList = useCallback(
@@ -203,11 +207,14 @@ export function LinkLibraryPage({
       nextFilters: LinkFilterValues,
       nextOffset: number,
       keepSelection = true,
+      nextPageSize = pageSize,
     ) => {
       setLoading(true);
 
       try {
-        const result = await listLinks(filtersToParams(nextFilters, nextOffset));
+        const result = await listLinks(
+          filtersToParams(nextFilters, nextOffset, nextPageSize),
+        );
         setItems(result.items);
         setTotal(result.total);
         setSelectedItem((current) => {
@@ -229,7 +236,7 @@ export function LinkLibraryPage({
         setLoading(false);
       }
     },
-    [showToast],
+    [showToast, pageSize],
   );
 
   const applyLocalItemUpdate = useCallback(
@@ -312,7 +319,9 @@ export function LinkLibraryPage({
       setLoading(true);
 
       try {
-        const result = await listLinks(filtersToParams(appliedFilters, offset));
+        const result = await listLinks(
+          filtersToParams(appliedFilters, offset, pageSize),
+        );
         if (!active) return;
         setItems(result.items);
         setTotal(result.total);
@@ -330,7 +339,7 @@ export function LinkLibraryPage({
     return () => {
       active = false;
     };
-  }, [appliedFilters, offset, showToast, filtersInitialized]);
+  }, [appliedFilters, offset, pageSize, showToast, filtersInitialized]);
 
   useEffect(() => {
     if (!filtersInitialized) {
@@ -563,15 +572,13 @@ export function LinkLibraryPage({
     }
   }
 
-  function handlePrevPage() {
-    setOffset((current) => Math.max(0, current - PAGE_SIZE));
+  function handlePageChange(page: number) {
+    setOffset((page - 1) * pageSize);
   }
 
-  function handleNextPage() {
-    setOffset((current) => {
-      const next = current + PAGE_SIZE;
-      return next >= total ? current : next;
-    });
+  function handlePageSizeChange(nextPageSize: PageSizeOption) {
+    setPageSize(nextPageSize);
+    setOffset(0);
   }
 
   function handleExportExcel() {
@@ -784,11 +791,11 @@ export function LinkLibraryPage({
                 </div>
               )}
 
-              <div className="flex shrink-0 items-center justify-between gap-3 border-t border-zinc-200 px-3 py-2 text-xs text-zinc-700">
+              <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-t border-zinc-200 px-3 py-2 text-xs text-zinc-700">
                 <div className="shrink-0 whitespace-nowrap">
-                  共 {total} 条，第 {currentPage} / {totalPages} 页
+                  共 {total} 条，显示 {displayRange.start}-{displayRange.end} 条
                 </div>
-                <div className="flex min-w-0 items-center gap-2">
+                <div className="flex min-w-0 flex-wrap items-center justify-end gap-2">
                   {toast ? (
                     <span
                       className={`max-w-[360px] truncate rounded px-2 py-0.5 text-xs ${getToastClassName(toast.variant)}`}
@@ -797,22 +804,13 @@ export function LinkLibraryPage({
                       {toast.message}
                     </span>
                   ) : null}
-                  <button
-                    type="button"
-                    className="shrink-0 rounded border border-zinc-300 px-2 py-1 hover:bg-zinc-50 disabled:opacity-50"
-                    onClick={handlePrevPage}
-                    disabled={offset === 0}
-                  >
-                    上一页
-                  </button>
-                  <button
-                    type="button"
-                    className="shrink-0 rounded border border-zinc-300 px-2 py-1 hover:bg-zinc-50 disabled:opacity-50"
-                    onClick={handleNextPage}
-                    disabled={offset + PAGE_SIZE >= total}
-                  >
-                    下一页
-                  </button>
+                  <LinkPagination
+                    total={total}
+                    offset={offset}
+                    pageSize={pageSize}
+                    onPageSizeChange={handlePageSizeChange}
+                    onPageChange={handlePageChange}
+                  />
                 </div>
               </div>
             </div>
