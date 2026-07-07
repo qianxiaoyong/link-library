@@ -148,11 +148,13 @@ export function LinkLibraryPage({
     useState<LinkFilterValues>(initialFilters);
   const [filtersInitialized, setFiltersInitialized] = useState(false);
   const skipNextPersistRef = useRef(false);
+  const staleWhileLoadingRef = useRef(false);
   const [offset, setOffset] = useState(0);
   const [pageSize, setPageSize] = useState<PageSizeOption>(DEFAULT_PAGE_SIZE);
   const [items, setItems] = useState<ResourceLink[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [tableOverlayLoading, setTableOverlayLoading] = useState(false);
   const [selectedItem, setSelectedItem] = useState<ResourceLink | null>(null);
   const [selectedRowIds, setSelectedRowIds] = useState<Set<string>>(new Set());
   const [formOpen, setFormOpen] = useState(false);
@@ -316,6 +318,9 @@ export function LinkLibraryPage({
     let active = true;
 
     async function loadInitial() {
+      const keepTableVisible = staleWhileLoadingRef.current;
+      staleWhileLoadingRef.current = false;
+      setTableOverlayLoading(keepTableVisible);
       setLoading(true);
 
       try {
@@ -325,12 +330,17 @@ export function LinkLibraryPage({
         if (!active) return;
         setItems(result.items);
         setTotal(result.total);
-        setSelectedRowIds(new Set());
+        if (!keepTableVisible) {
+          setSelectedRowIds(new Set());
+        }
       } catch (error) {
         if (!active) return;
         showToast(getErrorMessage(error), "error");
       } finally {
-        if (active) setLoading(false);
+        if (active) {
+          setLoading(false);
+          setTableOverlayLoading(false);
+        }
       }
     }
 
@@ -573,10 +583,12 @@ export function LinkLibraryPage({
   }
 
   function handlePageChange(page: number) {
+    staleWhileLoadingRef.current = true;
     setOffset((page - 1) * pageSize);
   }
 
   function handlePageSizeChange(nextPageSize: PageSizeOption) {
+    staleWhileLoadingRef.current = true;
     setPageSize(nextPageSize);
     setOffset(0);
   }
@@ -770,12 +782,12 @@ export function LinkLibraryPage({
                 ) : null}
               </div>
 
-              {loading || !filtersInitialized ? (
+              {!filtersInitialized || (loading && !tableOverlayLoading) ? (
                 <div className="flex h-full items-center justify-center text-sm text-zinc-600">
                   加载中...
                 </div>
               ) : (
-                <div className="min-h-0 flex-1 overflow-auto">
+                <div className="relative min-h-0 flex-1 overflow-auto">
                   <LinkTable
                     items={items}
                     offset={offset}
@@ -788,6 +800,17 @@ export function LinkLibraryPage({
                     onEdit={openEditForm}
                     onDelete={requestDelete}
                   />
+                  {tableOverlayLoading ? (
+                    <div
+                      className="pointer-events-none absolute inset-0 flex items-start justify-center bg-white/60 pt-10"
+                      aria-live="polite"
+                      aria-busy="true"
+                    >
+                      <span className="rounded border border-zinc-200 bg-white px-3 py-1.5 text-sm text-zinc-600 shadow-sm">
+                        加载中...
+                      </span>
+                    </div>
+                  ) : null}
                 </div>
               )}
 
@@ -808,6 +831,7 @@ export function LinkLibraryPage({
                     total={total}
                     offset={offset}
                     pageSize={pageSize}
+                    loading={tableOverlayLoading}
                     onPageSizeChange={handlePageSizeChange}
                     onPageChange={handlePageChange}
                   />

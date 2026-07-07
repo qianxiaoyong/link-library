@@ -32,8 +32,8 @@ export function LibraryShell({
             />
           </div>
           <div className="flex shrink-0 flex-nowrap items-center gap-1.5 overflow-x-auto">
-            <LibraryViewToggle />
             {actions}
+            <LibraryViewToggle />
           </div>
         </div>
       </header>

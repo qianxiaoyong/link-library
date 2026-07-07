@@ -260,6 +260,16 @@ export function CoverageMatrixPage() {
     <LibraryShell
       activeView="stats"
       subtitleOverride="按书名号 × 科目版本展示年级覆盖（仅统计正常资料）"
+      actions={
+        <button
+          type="button"
+          onClick={handleExportExcel}
+          disabled={exporting || loading || !filtersInitialized}
+          className="whitespace-nowrap rounded border border-zinc-300 bg-white px-2.5 py-1.5 text-xs font-medium text-zinc-800 hover:bg-zinc-50 disabled:opacity-60"
+        >
+          {exporting ? "导出中..." : "导出Excel"}
+        </button>
+      }
     >
       <main className="flex min-h-0 flex-1 flex-col gap-3 p-3">
         <div className="flex shrink-0 flex-wrap items-center gap-2">
@@ -270,14 +280,6 @@ export function CoverageMatrixPage() {
             onSearch={handleSearch}
             onReset={handleReset}
           />
-          <button
-            type="button"
-            onClick={handleExportExcel}
-            disabled={exporting || loading || !filtersInitialized}
-            className="h-9 shrink-0 rounded border border-zinc-300 bg-white px-2.5 text-xs font-medium text-zinc-800 hover:bg-zinc-50 disabled:opacity-60"
-          >
-            {exporting ? "导出中..." : "导出Excel"}
-          </button>
         </div>
 
         <div className="flex shrink-0 flex-wrap items-center gap-x-4 gap-y-1 text-xs text-zinc-600">

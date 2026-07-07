@@ -37,7 +37,7 @@ export function LibraryViewToggle() {
   return (
     <Link
       href="/stats/matrix"
-      className={isStatsSection ? getActiveClassName() : getNormalClassName()}
+      className={getActiveClassName()}
       aria-current={isStatsSection ? "page" : undefined}
       title="打开覆盖矩阵统计表"
     >
