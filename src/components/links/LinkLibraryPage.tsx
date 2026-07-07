@@ -724,35 +724,45 @@ export function LinkLibraryPage({
         />
 
         <div className="grid min-h-0 flex-1 grid-cols-1 gap-3 xl:grid-cols-[minmax(0,1fr)_300px]">
-          <div className="flex min-h-0 min-w-0 flex-col gap-2">
-            {selectedRowIds.size > 0 ? (
-              <div className="flex shrink-0 flex-wrap items-center gap-3 rounded border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-900">
-                <span>已选择 {selectedRowIds.size} 条</span>
-                <button
-                  type="button"
-                  className="rounded border border-blue-300 bg-white px-2 py-0.5 text-xs font-medium text-blue-700 hover:bg-blue-100"
-                  onClick={() => void handleBatchCopySourceText()}
-                >
-                  批量复制
-                </button>
-                <button
-                  type="button"
-                  className="rounded border border-blue-300 bg-white px-2 py-0.5 text-xs font-medium text-blue-700 hover:bg-blue-100"
-                  onClick={openBatchEditDialog}
-                >
-                  批量编辑
-                </button>
-                <button
-                  type="button"
-                  className="text-blue-700 hover:underline"
-                  onClick={() => setSelectedRowIds(new Set())}
-                >
-                  取消选择
-                </button>
-              </div>
-            ) : null}
-
+          <div className="flex min-h-0 min-w-0 flex-col">
             <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-zinc-200 bg-white">
+              <div
+                className={`flex h-9 shrink-0 items-center gap-3 border-b px-3 text-sm ${
+                  selectedRowIds.size > 0
+                    ? "border-blue-200 bg-blue-50 text-blue-900"
+                    : "border-zinc-200 bg-white"
+                }`}
+              >
+                {selectedRowIds.size > 0 ? (
+                  <>
+                    <span className="text-xs font-medium">
+                      已选择 {selectedRowIds.size} 条
+                    </span>
+                    <button
+                      type="button"
+                      className="rounded border border-blue-300 bg-white px-2 py-0.5 text-xs font-medium text-blue-700 hover:bg-blue-100"
+                      onClick={() => void handleBatchCopySourceText()}
+                    >
+                      批量复制
+                    </button>
+                    <button
+                      type="button"
+                      className="rounded border border-blue-300 bg-white px-2 py-0.5 text-xs font-medium text-blue-700 hover:bg-blue-100"
+                      onClick={openBatchEditDialog}
+                    >
+                      批量编辑
+                    </button>
+                    <button
+                      type="button"
+                      className="text-xs text-blue-700 hover:underline"
+                      onClick={() => setSelectedRowIds(new Set())}
+                    >
+                      取消选择
+                    </button>
+                  </>
+                ) : null}
+              </div>
+
               {loading || !filtersInitialized ? (
                 <div className="flex h-full items-center justify-center text-sm text-zinc-600">
                   加载中...
