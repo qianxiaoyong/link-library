@@ -1,36 +1,34 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 学习资料链接库
 
-## Getting Started
+本项目是一个本地运行的学习资料网盘链接管理工具，用于登记和查询百度网盘、夸克网盘学习资料链接。
 
-First, run the development server:
+## 功能特性
+
+- 百度网盘 / 夸克网盘链接登记
+- 单条新增、编辑、删除
+- 批量粘贴解析
+- 自动提取标题、链接、提取码
+- 支持资料年份、科目、年级、资料分类等字段
+- 支持搜索和筛选
+- 支持批量编辑
+- 支持 Excel 导出
+- 支持 SQLite 数据库备份
+- 本地运行，不依赖云服务
+- 不接 AI API，不自动访问网盘链接
+
+## 技术栈
+
+- Next.js
+- TypeScript
+- React
+- SQLite
+- better-sqlite3
+- Tailwind CSS
+- ExcelJS
+
+## 本地运行
 
 ```bash
+npm install
+npm run db:init
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
