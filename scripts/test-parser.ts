@@ -39,6 +39,18 @@ const QUARK_BATCH = `我用夸克网盘分享了「🍎⭐️小学英语3-6年�
 我用夸克网盘分享了「🍎⭐️小学数学1-6年级上册《期末复习专项合集》」，点击链接即可保存。打开「夸克APP」，无需下载在线播放视频，畅享原画5倍速，支持电视投屏。
 链接：https://pan.quark.cn/s/7fef3f13f7c7`;
 
+const QUARK_BATCH_WITH_NI = `我用夸克网盘给你分享了「26秋《一本一起写暑假作业》苏教数学」，点击链接或复制整段内容，打开「夸克APP」即可获取。
+链接：https://pan.quark.cn/s/52f469d78085
+
+我用夸克网盘给你分享了「26秋《一本一起写暑假作业》人教英语」，点击链接或复制整段内容，打开「夸克APP」即可获取。
+链接：https://pan.quark.cn/s/ab05352f4569
+
+我用夸克网盘给你分享了「26秋《一本一起写暑假作业》人教数学」，点击链接或复制整段内容，打开「夸克APP」即可获取。
+链接：https://pan.quark.cn/s/37d09d0ba975
+
+我用夸克网盘给你分享了「26秋《一本一起写暑假作业》北师数学」，点击链接或复制整段内容，打开「夸克APP」即可获取。
+链接：https://pan.quark.cn/s/8dc380a8d44b`;
+
 const MIXED_INPUT = `${BAIDU_SINGLE}
 
 ${QUARK_SINGLE}`;
@@ -99,6 +111,25 @@ runTest("夸克批量", () => {
     result.items.every((item) =>
       item.title.includes("🍎⭐️"),
     ),
+  );
+});
+
+runTest("夸克批量（给你分享了）", () => {
+  const result = parseLinkText(QUARK_BATCH_WITH_NI);
+
+  assert.equal(result.items.length, 4);
+  assert.equal(result.summary.quarkCount, 4);
+  assert.deepEqual(
+    result.items.map((item) => item.title),
+    [
+      "26秋《一本一起写暑假作业》苏教数学",
+      "26秋《一本一起写暑假作业》人教英语",
+      "26秋《一本一起写暑假作业》人教数学",
+      "26秋《一本一起写暑假作业》北师数学",
+    ],
+  );
+  assert.ok(
+    result.items.every((item) => item.warnings.length === 0),
   );
 });
 

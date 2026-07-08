@@ -1,9 +1,11 @@
 import { normalizePanUrl } from "./normalize-url";
 import type { ParsedLinkItem } from "./link-parser-types";
 
-const QUARK_BLOCK_START = /我用夸克网盘分享了/g;
+const QUARK_SHARE_PREFIX = "我用夸克网盘(?:给你)?分享了";
 
-const QUARK_TITLE_PATTERN = /我用夸克网盘分享了「(.+?)」/;
+const QUARK_BLOCK_START = new RegExp(`${QUARK_SHARE_PREFIX}`, "g");
+
+const QUARK_TITLE_PATTERN = new RegExp(`${QUARK_SHARE_PREFIX}「(.+?)」`);
 
 export function findQuarkBlockStart(text: string, linkIndex: number): number {
   let lastStart = 0;
