@@ -385,6 +385,13 @@ function LinkDetailPanelContent({
           <div className="flex flex-wrap gap-1.5">
             <button
               type="button"
+              className="rounded border border-zinc-300 px-2 py-1 text-xs hover:bg-zinc-50"
+              onClick={() => void handleCopySourceText()}
+            >
+              复制
+            </button>
+            <button
+              type="button"
               className={`rounded border px-2 py-1 text-xs hover:bg-zinc-50 ${
                 item.favorite
                   ? "border-amber-300 text-amber-800 hover:bg-amber-50"
@@ -393,13 +400,6 @@ function LinkDetailPanelContent({
               onClick={() => onToggleFavorite(item)}
             >
               {item.favorite ? "取消收藏" : "收藏"}
-            </button>
-            <button
-              type="button"
-              className="rounded border border-zinc-300 px-2 py-1 text-xs hover:bg-zinc-50"
-              onClick={() => void handleCopySourceText()}
-            >
-              复制
             </button>
             <button
               type="button"

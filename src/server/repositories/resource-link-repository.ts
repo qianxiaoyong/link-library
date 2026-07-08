@@ -144,6 +144,8 @@ function findDuplicate(
   return Boolean(row);
 }
 
+const LIST_ORDER_BY = "created_at DESC";
+
 export function listResourceLinks(filters: ListResourceLinksFilters = {}): {
   items: ResourceLink[];
   total: number;
@@ -164,7 +166,7 @@ export function listResourceLinks(filters: ListResourceLinksFilters = {}): {
       `SELECT ${SELECT_COLUMNS}
        FROM resource_links
        ${whereSql}
-       ORDER BY favorite DESC, created_at DESC
+       ORDER BY ${LIST_ORDER_BY}
        LIMIT ? OFFSET ?`,
     )
     .all(...params, limit, offset) as ResourceLinkRow[];
@@ -188,7 +190,7 @@ export function listResourceLinksForExport(
       `SELECT ${SELECT_COLUMNS}
        FROM resource_links
        ${whereSql}
-       ORDER BY favorite DESC, created_at DESC`,
+       ORDER BY ${LIST_ORDER_BY}`,
     )
     .all(...params) as ResourceLinkRow[];
 
