@@ -14,6 +14,14 @@ type MatrixColumn = {
   label: string;
 };
 
+export type MatrixCellInteractionPayload = {
+  identity: MatrixCellNoteIdentity;
+  anchorRect: DOMRect;
+  columnLabel: string;
+  clientX: number;
+  clientY: number;
+};
+
 type MatrixCellProps = {
   bookTitle: string;
   resourceCategory: ResourceCategory | null;
@@ -23,35 +31,31 @@ type MatrixCellProps = {
   notePreview: string | undefined;
   isRowSelected?: boolean;
   drillDownFilters: MatrixDrillDownFilters;
-  onOpenNote: (payload: {
-    identity: MatrixCellNoteIdentity;
-    anchorRect: DOMRect;
-    columnLabel: string;
-  }) => void;
+  onOpenLinks: (payload: MatrixCellInteractionPayload) => void;
+  onOpenContextMenu: (payload: MatrixCellInteractionPayload) => void;
 };
 
 const CELL_CLASS = "border border-zinc-200 px-2 py-1.5 text-center text-xs";
 
-function openNoteFromCell(
+function buildPayload(
   event: React.MouseEvent<HTMLTableCellElement>,
-  payload: Omit<MatrixCellProps, "hasNote" | "notePreview" | "onOpenNote">,
-  onOpenNote: MatrixCellProps["onOpenNote"],
-): void {
-  if ((event.target as HTMLElement).closest("a")) {
-    return;
-  }
-
-  event.preventDefault();
-  onOpenNote({
+  props: Pick<
+    MatrixCellProps,
+    "bookTitle" | "resourceCategory" | "column"
+  >,
+): MatrixCellInteractionPayload {
+  return {
     identity: {
-      bookTitle: payload.bookTitle,
-      resourceCategory: payload.resourceCategory,
-      subject: payload.column.subject,
-      textbookEdition: payload.column.textbookEdition,
+      bookTitle: props.bookTitle,
+      resourceCategory: props.resourceCategory,
+      subject: props.column.subject,
+      textbookEdition: props.column.textbookEdition,
     },
     anchorRect: event.currentTarget.getBoundingClientRect(),
-    columnLabel: payload.column.label,
-  });
+    columnLabel: props.column.label,
+    clientX: event.clientX,
+    clientY: event.clientY,
+  };
 }
 
 export function MatrixCell({
@@ -63,7 +67,8 @@ export function MatrixCell({
   notePreview,
   isRowSelected = false,
   drillDownFilters,
-  onOpenNote,
+  onOpenLinks,
+  onOpenContextMenu,
 }: MatrixCellProps) {
   const noteClassName = isRowSelected
     ? "relative bg-blue-50 hover:bg-blue-100"
@@ -72,27 +77,18 @@ export function MatrixCell({
       : "hover:bg-zinc-50";
 
   function handleClick(event: React.MouseEvent<HTMLTableCellElement>) {
-    openNoteFromCell(event, {
-      bookTitle,
-      resourceCategory,
-      column,
-      cell,
-      drillDownFilters,
-    }, onOpenNote);
+    if ((event.target as HTMLElement).closest("a")) {
+      return;
+    }
+    event.preventDefault();
+    onOpenLinks(buildPayload(event, { bookTitle, resourceCategory, column }));
   }
 
   function handleContextMenu(event: React.MouseEvent<HTMLTableCellElement>) {
     event.preventDefault();
-    onOpenNote({
-      identity: {
-        bookTitle,
-        resourceCategory,
-        subject: column.subject,
-        textbookEdition: column.textbookEdition,
-      },
-      anchorRect: event.currentTarget.getBoundingClientRect(),
-      columnLabel: column.label,
-    });
+    onOpenContextMenu(
+      buildPayload(event, { bookTitle, resourceCategory, column }),
+    );
   }
 
   if (!cell) {
@@ -130,7 +126,7 @@ export function MatrixCell({
 
   return (
     <td
-      className={`${CELL_CLASS} relative cursor-default ${noteClassName}`}
+      className={`${CELL_CLASS} relative cursor-pointer ${noteClassName}`}
       title={notePreview}
       onClick={handleClick}
       onContextMenu={handleContextMenu}

@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import {
   buildLinksPagePath,
   buildMatrixCellDeepLink,
+  buildMatrixCellLinksListParams,
   buildStatsBookTitleDeepLink,
   decodeLinksDeepLinkParams,
   encodeLinksDeepLinkParams,
@@ -101,6 +102,37 @@ function main(): void {
     assert.match(href, /textbookEdition=%E4%BA%BA%E6%95%99/);
     assert.match(href, /resourceCategory=practice/);
     assert.match(href, /q=53%E5%A4%A9%E5%A4%A9%E7%BB%83/);
+  });
+
+  runTest("矩阵单元格列表参数使用精确书名号，不误匹配子串", () => {
+    const params = buildMatrixCellLinksListParams(
+      { resourceYear: "26秋" },
+      "课堂笔记",
+      { subject: "数学", textbookEdition: "人教版" },
+      "practice",
+    );
+
+    assert.equal(params.bookTitleExact, "课堂笔记");
+    assert.equal("q" in params, false);
+    assert.equal(params.subject, "数学");
+    assert.equal(params.textbookEdition, "人教版");
+    assert.equal(params.resourceCategory, "practice");
+    assert.equal(params.resourceCategoryIsNull, undefined);
+  });
+
+  runTest("矩阵单元格列表参数支持未填科目版本与空分类", () => {
+    const params = buildMatrixCellLinksListParams(
+      {},
+      "课堂笔记",
+      { subject: "未填", textbookEdition: "未填" },
+      null,
+    );
+
+    assert.equal(params.subjectIsEmpty, true);
+    assert.equal(params.textbookEditionIsEmpty, true);
+    assert.equal(params.resourceCategoryIsNull, true);
+    assert.equal(params.subject, undefined);
+    assert.equal(params.textbookEdition, undefined);
   });
 
   console.log("\n全部深链测试通过。");

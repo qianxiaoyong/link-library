@@ -22,16 +22,24 @@ export class DuplicateLinkError extends Error {
 
 export type ListResourceLinksFilters = {
   q?: string;
+  /** 精确匹配标题中第一对《》内的书名号（与覆盖矩阵一致） */
+  bookTitleExact?: string;
   platform?: LinkPlatform;
   status?: "normal" | "invalid" | "all";
   favorite?: boolean;
   resourceCategory?: "practice" | "paper" | "special";
+  /** 匹配 resource_category 为空 */
+  resourceCategoryIsNull?: boolean;
   schoolStage?: string;
   grade?: string;
   semester?: string;
   subject?: string;
+  /** 匹配 subject 为空（矩阵列「未填」） */
+  subjectIsEmpty?: boolean;
   resourceYear?: string;
   textbookEdition?: string;
+  /** 匹配 textbook_edition 为空（矩阵列「未填」） */
+  textbookEditionIsEmpty?: boolean;
   limit?: number;
   offset?: number;
 };
@@ -72,7 +80,9 @@ function buildWhereClause(filters: ListResourceLinksFilters): {
     params.push(filters.favorite ? 1 : 0);
   }
 
-  if (filters.resourceCategory) {
+  if (filters.resourceCategoryIsNull) {
+    conditions.push("(resource_category IS NULL OR TRIM(resource_category) = '')");
+  } else if (filters.resourceCategory) {
     conditions.push("resource_category = ?");
     params.push(filters.resourceCategory);
   }
@@ -92,7 +102,9 @@ function buildWhereClause(filters: ListResourceLinksFilters): {
     params.push(filters.semester);
   }
 
-  if (filters.subject) {
+  if (filters.subjectIsEmpty) {
+    conditions.push("(subject IS NULL OR TRIM(subject) = '')");
+  } else if (filters.subject) {
     conditions.push("subject = ?");
     params.push(filters.subject);
   }
@@ -102,9 +114,25 @@ function buildWhereClause(filters: ListResourceLinksFilters): {
     params.push(filters.resourceYear);
   }
 
-  if (filters.textbookEdition) {
+  if (filters.textbookEditionIsEmpty) {
+    conditions.push("(textbook_edition IS NULL OR TRIM(textbook_edition) = '')");
+  } else if (filters.textbookEdition) {
     conditions.push("textbook_edition = ?");
     params.push(filters.textbookEdition);
+  }
+
+  if (filters.bookTitleExact?.trim()) {
+    // 与 extractFirstBookTitle 一致：第一对《》内文字精确相等
+    conditions.push(`(
+      instr(title, '《') > 0
+      AND instr(substr(title, instr(title, '《') + 1), '》') > 0
+      AND trim(substr(
+        title,
+        instr(title, '《') + 1,
+        instr(substr(title, instr(title, '《') + 1), '》') - 1
+      )) = ?
+    )`);
+    params.push(filters.bookTitleExact.trim());
   }
 
   if (filters.q?.trim()) {

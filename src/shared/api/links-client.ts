@@ -11,16 +11,20 @@ import type {
 
 export type ListLinksParams = {
   q?: string;
+  bookTitleExact?: string;
   platform?: LinkPlatform;
   status?: LinkStatus | "all";
   favorite?: boolean;
   resourceCategory?: ResourceCategory;
+  resourceCategoryIsNull?: boolean;
   schoolStage?: string;
   grade?: string;
   semester?: string;
   subject?: string;
+  subjectIsEmpty?: boolean;
   resourceYear?: string;
   textbookEdition?: string;
+  textbookEditionIsEmpty?: boolean;
   limit?: number;
   offset?: number;
 };
@@ -180,12 +184,17 @@ function buildFilterQueryString(
   const searchParams = new URLSearchParams();
 
   if (params.q?.trim()) searchParams.set("q", params.q.trim());
+  if (params.bookTitleExact?.trim()) {
+    searchParams.set("bookTitleExact", params.bookTitleExact.trim());
+  }
   if (params.platform) searchParams.set("platform", params.platform);
   if (params.status) searchParams.set("status", params.status);
   if (params.favorite !== undefined) {
     searchParams.set("favorite", String(params.favorite));
   }
-  if (params.resourceCategory) {
+  if (params.resourceCategoryIsNull) {
+    searchParams.set("resourceCategoryIsNull", "true");
+  } else if (params.resourceCategory) {
     searchParams.set("resourceCategory", params.resourceCategory);
   }
   if (params.schoolStage?.trim()) {
@@ -195,11 +204,17 @@ function buildFilterQueryString(
   if (params.semester?.trim()) {
     searchParams.set("semester", params.semester.trim());
   }
-  if (params.subject?.trim()) searchParams.set("subject", params.subject.trim());
+  if (params.subjectIsEmpty) {
+    searchParams.set("subjectIsEmpty", "true");
+  } else if (params.subject?.trim()) {
+    searchParams.set("subject", params.subject.trim());
+  }
   if (params.resourceYear?.trim()) {
     searchParams.set("resourceYear", params.resourceYear.trim());
   }
-  if (params.textbookEdition?.trim()) {
+  if (params.textbookEditionIsEmpty) {
+    searchParams.set("textbookEditionIsEmpty", "true");
+  } else if (params.textbookEdition?.trim()) {
     searchParams.set("textbookEdition", params.textbookEdition.trim());
   }
 

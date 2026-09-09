@@ -135,13 +135,13 @@ export function buildStatsBookTitleDeepLink(
   });
 }
 
-export function buildMatrixCellDeepLink(
+export function buildMatrixCellListParams(
   filters: MatrixDrillDownFilters,
   bookTitle: string,
   column: MatrixCellDrillDownTarget,
   rowResourceCategory?: ResourceCategory | null,
-): string {
-  return buildLinksPagePath({
+): LinksDeepLinkParams {
+  return {
     q: bookTitle,
     platform: filters.platform || undefined,
     resourceYear: normalizeDeepLinkField(filters.resourceYear),
@@ -151,5 +151,66 @@ export function buildMatrixCellDeepLink(
     textbookEdition: normalizeDeepLinkField(column.textbookEdition),
     resourceCategory:
       filters.resourceCategory || rowResourceCategory || undefined,
-  });
+  };
+}
+
+/**
+ * 矩阵单元格弹窗查库参数：书名号按第一对《》精确匹配，
+ * 科目/版本「未填」与分类为空与矩阵聚合规则一致。
+ */
+export type MatrixCellLinksListParams = {
+  bookTitleExact: string;
+  platform?: LinkPlatform;
+  resourceYear?: string;
+  semester?: string;
+  schoolStage?: string;
+  subject?: string;
+  subjectIsEmpty?: boolean;
+  textbookEdition?: string;
+  textbookEditionIsEmpty?: boolean;
+  resourceCategory?: ResourceCategory;
+  resourceCategoryIsNull?: boolean;
+};
+
+export function buildMatrixCellLinksListParams(
+  filters: MatrixDrillDownFilters,
+  bookTitle: string,
+  column: MatrixCellDrillDownTarget,
+  rowResourceCategory?: ResourceCategory | null,
+): MatrixCellLinksListParams {
+  const subject = column.subject.trim();
+  const textbookEdition = column.textbookEdition.trim();
+
+  return {
+    bookTitleExact: bookTitle.trim(),
+    platform: filters.platform || undefined,
+    resourceYear: normalizeDeepLinkField(filters.resourceYear),
+    semester: normalizeDeepLinkField(filters.semester),
+    schoolStage: normalizeDeepLinkField(filters.schoolStage),
+    ...(subject === "未填" || !subject
+      ? { subjectIsEmpty: true }
+      : { subject }),
+    ...(textbookEdition === "未填" || !textbookEdition
+      ? { textbookEditionIsEmpty: true }
+      : { textbookEdition }),
+    ...(rowResourceCategory
+      ? { resourceCategory: rowResourceCategory }
+      : { resourceCategoryIsNull: true }),
+  };
+}
+
+export function buildMatrixCellDeepLink(
+  filters: MatrixDrillDownFilters,
+  bookTitle: string,
+  column: MatrixCellDrillDownTarget,
+  rowResourceCategory?: ResourceCategory | null,
+): string {
+  return buildLinksPagePath(
+    buildMatrixCellListParams(
+      filters,
+      bookTitle,
+      column,
+      rowResourceCategory,
+    ),
+  );
 }

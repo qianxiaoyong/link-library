@@ -7,7 +7,10 @@ import {
   type MatrixFilterValues,
 } from "./MatrixFilters";
 import { CoverageMatrixTable } from "./CoverageMatrixTable";
+import { MatrixCellContextMenu } from "./MatrixCellContextMenu";
+import { MatrixCellLinksPopover } from "./MatrixCellLinksPopover";
 import { MatrixCellNotePopover } from "./MatrixCellNotePopover";
+import type { MatrixCellInteractionPayload } from "./MatrixCell";
 import {
   getStatsToastClassName,
   useStatsToast,
@@ -29,6 +32,10 @@ import {
   upsertCoverageMatrixNote,
 } from "@/shared/api/coverage-matrix-notes-client";
 import {
+  buildMatrixCellLinksListParams,
+  type MatrixCellLinksListParams,
+} from "@/shared/library/deep-link-filters";
+import {
   buildMatrixCellNoteKey,
   type MatrixCellNoteIdentity,
 } from "@/shared/stats/coverage-matrix/cell-note-key";
@@ -38,6 +45,20 @@ type NotePopoverState = {
   identity: MatrixCellNoteIdentity;
   anchorRect: DOMRect;
   columnLabel: string;
+};
+
+type LinksPopoverState = {
+  title: string;
+  listParams: MatrixCellLinksListParams;
+  anchorRect: DOMRect;
+};
+
+type ContextMenuState = {
+  identity: MatrixCellNoteIdentity;
+  anchorRect: DOMRect;
+  columnLabel: string;
+  x: number;
+  y: number;
 };
 
 function filtersToParams(
@@ -77,6 +98,10 @@ export function CoverageMatrixPage() {
   );
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [notePopover, setNotePopover] = useState<NotePopoverState | null>(null);
+  const [linksPopover, setLinksPopover] = useState<LinksPopoverState | null>(
+    null,
+  );
+  const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
   const [noteSaving, setNoteSaving] = useState(false);
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
@@ -211,7 +236,39 @@ export function CoverageMatrixPage() {
     }
   }
 
+  function handleOpenLinks(payload: MatrixCellInteractionPayload) {
+    setContextMenu(null);
+    setNotePopover(null);
+    setLinksPopover({
+      title: `${payload.identity.bookTitle} · ${payload.columnLabel}`,
+      listParams: buildMatrixCellLinksListParams(
+        filters,
+        payload.identity.bookTitle,
+        {
+          subject: payload.identity.subject,
+          textbookEdition: payload.identity.textbookEdition,
+        },
+        payload.identity.resourceCategory,
+      ),
+      anchorRect: payload.anchorRect,
+    });
+  }
+
+  function handleOpenContextMenu(payload: MatrixCellInteractionPayload) {
+    setLinksPopover(null);
+    setNotePopover(null);
+    setContextMenu({
+      identity: payload.identity,
+      anchorRect: payload.anchorRect,
+      columnLabel: payload.columnLabel,
+      x: payload.clientX,
+      y: payload.clientY,
+    });
+  }
+
   function handleOpenNote(payload: NotePopoverState) {
+    setLinksPopover(null);
+    setContextMenu(null);
     setNotePopover(payload);
   }
 
@@ -220,6 +277,19 @@ export function CoverageMatrixPage() {
       return;
     }
     setNotePopover(null);
+  }
+
+  function handleEditNoteFromMenu() {
+    if (!contextMenu) {
+      return;
+    }
+    const next = {
+      identity: contextMenu.identity,
+      anchorRect: contextMenu.anchorRect,
+      columnLabel: contextMenu.columnLabel,
+    };
+    setContextMenu(null);
+    handleOpenNote(next);
   }
 
   async function persistNote(note: string) {
@@ -296,7 +366,26 @@ export function CoverageMatrixPage() {
           loading={loading || !filtersInitialized}
           drillDownFilters={filters}
           notes={notes}
-          onOpenNote={handleOpenNote}
+          onOpenLinks={handleOpenLinks}
+          onOpenContextMenu={handleOpenContextMenu}
+        />
+
+        <MatrixCellLinksPopover
+          open={Boolean(linksPopover)}
+          title={linksPopover?.title ?? ""}
+          listParams={linksPopover?.listParams ?? null}
+          anchorRect={linksPopover?.anchorRect ?? null}
+          onShowToast={showToast}
+          onClose={() => setLinksPopover(null)}
+        />
+
+        <MatrixCellContextMenu
+          open={Boolean(contextMenu)}
+          position={
+            contextMenu ? { x: contextMenu.x, y: contextMenu.y } : null
+          }
+          onEditNote={handleEditNoteFromMenu}
+          onClose={() => setContextMenu(null)}
         />
 
         <MatrixCellNotePopover

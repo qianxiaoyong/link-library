@@ -4,20 +4,17 @@ import { useEffect, useState, type ReactNode } from "react";
 import type { CoverageMatrixResponse } from "@/shared/api/coverage-matrix-client";
 import type { MatrixDrillDownFilters } from "@/shared/library/deep-link-filters";
 import { buildMatrixCellNoteKey } from "@/shared/stats/coverage-matrix/cell-note-key";
-import type { MatrixCellNoteIdentity } from "@/shared/stats/coverage-matrix/cell-note-key";
 import type { CoverageMatrixRow } from "@/shared/stats/coverage-matrix";
 import { MatrixCell } from "./MatrixCell";
+import type { MatrixCellInteractionPayload } from "./MatrixCell";
 
 type CoverageMatrixTableProps = {
   data: CoverageMatrixResponse | null;
   loading: boolean;
   drillDownFilters: MatrixDrillDownFilters;
   notes: Record<string, string>;
-  onOpenNote: (payload: {
-    identity: MatrixCellNoteIdentity;
-    anchorRect: DOMRect;
-    columnLabel: string;
-  }) => void;
+  onOpenLinks: (payload: MatrixCellInteractionPayload) => void;
+  onOpenContextMenu: (payload: MatrixCellInteractionPayload) => void;
 };
 
 const CELL_CLASS = "border border-zinc-200 px-2 py-1.5 text-center text-xs";
@@ -31,7 +28,8 @@ function renderBodyRows(
   data: CoverageMatrixResponse,
   drillDownFilters: MatrixDrillDownFilters,
   notes: Record<string, string>,
-  onOpenNote: CoverageMatrixTableProps["onOpenNote"],
+  onOpenLinks: CoverageMatrixTableProps["onOpenLinks"],
+  onOpenContextMenu: CoverageMatrixTableProps["onOpenContextMenu"],
   selectedRowKey: string | null,
   onSelectRow: (rowKey: string) => void,
 ) {
@@ -94,7 +92,8 @@ function renderBodyRows(
               notePreview={notePreview}
               isRowSelected={isSelected}
               drillDownFilters={drillDownFilters}
-              onOpenNote={onOpenNote}
+              onOpenLinks={onOpenLinks}
+              onOpenContextMenu={onOpenContextMenu}
             />
           );
         })}
@@ -110,7 +109,8 @@ export function CoverageMatrixTable({
   loading,
   drillDownFilters,
   notes,
-  onOpenNote,
+  onOpenLinks,
+  onOpenContextMenu,
 }: CoverageMatrixTableProps) {
   const [selectedRowKey, setSelectedRowKey] = useState<string | null>(null);
 
@@ -160,7 +160,8 @@ export function CoverageMatrixTable({
             data,
             drillDownFilters,
             notes,
-            onOpenNote,
+            onOpenLinks,
+            onOpenContextMenu,
             selectedRowKey,
             handleSelectRow,
           )}

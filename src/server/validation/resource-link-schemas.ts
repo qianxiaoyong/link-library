@@ -102,6 +102,7 @@ export const importDefaultsConfigSchema = z.object({
 
 export const listResourceLinksQuerySchema = z.object({
   q: z.string().optional(),
+  bookTitleExact: z.string().optional(),
   platform: z.enum(LINK_PLATFORMS).optional(),
   status: z.enum([...LINK_STATUSES, "all"]).optional().default("normal"),
   favorite: z
@@ -111,12 +112,30 @@ export const listResourceLinksQuerySchema = z.object({
       value === undefined ? undefined : value === "true",
     ),
   resourceCategory: z.enum(RESOURCE_CATEGORIES).optional(),
+  resourceCategoryIsNull: z
+    .enum(["true", "false"])
+    .optional()
+    .transform((value) =>
+      value === undefined ? undefined : value === "true",
+    ),
   schoolStage: z.string().optional(),
   grade: z.string().optional(),
   semester: z.string().optional(),
   subject: z.string().optional(),
+  subjectIsEmpty: z
+    .enum(["true", "false"])
+    .optional()
+    .transform((value) =>
+      value === undefined ? undefined : value === "true",
+    ),
   resourceYear: z.string().optional(),
   textbookEdition: z.string().optional(),
+  textbookEditionIsEmpty: z
+    .enum(["true", "false"])
+    .optional()
+    .transform((value) =>
+      value === undefined ? undefined : value === "true",
+    ),
   limit: z.coerce.number().int().min(1).max(200).optional().default(50),
   offset: z.coerce.number().int().min(0).optional().default(0),
 });
