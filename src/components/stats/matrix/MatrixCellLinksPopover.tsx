@@ -14,6 +14,7 @@ import {
   getCategoryLabel,
   getPlatformTableLabel,
 } from "@/components/links/link-ui-utils";
+import { sortMatrixCellLinkItems } from "./matrix-cell-links-sort";
 
 type MatrixCellLinksPopoverProps = {
   open: boolean;
@@ -28,6 +29,7 @@ const PANEL_WIDTH = 560;
 const PANEL_MARGIN = 8;
 const PANEL_GAP = 4;
 const PAGE_SIZE = 10;
+const FETCH_PAGE_SIZE = 200;
 const DEFAULT_ESTIMATED_HEIGHT = 280;
 
 function clamp(value: number, min: number, max: number): number {
@@ -85,7 +87,7 @@ export function MatrixCellLinksPopover({
   onClose,
 }: MatrixCellLinksPopoverProps) {
   const panelRef = useRef<HTMLDivElement>(null);
-  const [items, setItems] = useState<ResourceLink[]>([]);
+  const [allItems, setAllItems] = useState<ResourceLink[]>([]);
   const [total, setTotal] = useState(0);
   const [offset, setOffset] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -95,41 +97,52 @@ export function MatrixCellLinksPopover({
     maxHeight: 420,
   });
 
-  const loadPage = useCallback(
-    async (nextOffset: number) => {
-      if (!listParams) {
-        return;
-      }
+  const loadAll = useCallback(async () => {
+    if (!listParams) {
+      return;
+    }
 
-      setLoading(true);
-      try {
+    setLoading(true);
+    try {
+      const collected: ResourceLink[] = [];
+      let nextOffset = 0;
+      let totalCount = 0;
+
+      for (;;) {
         const result = await listLinks({
           ...listParams,
           status: "normal",
-          limit: PAGE_SIZE,
+          limit: FETCH_PAGE_SIZE,
           offset: nextOffset,
         });
-        setItems(result.items);
-        setTotal(result.total);
-        setOffset(nextOffset);
-      } catch (error) {
-        onShowToast(getErrorMessage(error), "error");
-      } finally {
-        setLoading(false);
+        totalCount = result.total;
+        collected.push(...result.items);
+        nextOffset += result.items.length;
+        if (result.items.length === 0 || collected.length >= result.total) {
+          break;
+        }
       }
-    },
-    [listParams, onShowToast],
-  );
+
+      const sorted = sortMatrixCellLinkItems(collected);
+      setAllItems(sorted);
+      setTotal(totalCount);
+      setOffset(0);
+    } catch (error) {
+      onShowToast(getErrorMessage(error), "error");
+    } finally {
+      setLoading(false);
+    }
+  }, [listParams, onShowToast]);
 
   useEffect(() => {
     if (!open || !listParams) {
       return;
     }
-    setItems([]);
+    setAllItems([]);
     setTotal(0);
     setOffset(0);
-    void loadPage(0);
-  }, [open, listParams, loadPage]);
+    void loadAll();
+  }, [open, listParams, loadAll]);
 
   useLayoutEffect(() => {
     if (!open || !anchorRect) {
@@ -140,7 +153,7 @@ export function MatrixCellLinksPopover({
       panelRef.current?.getBoundingClientRect().height ||
       DEFAULT_ESTIMATED_HEIGHT;
     setPlacement(getPanelPlacement(anchorRect, measuredHeight));
-  }, [open, anchorRect, items, loading, total]);
+  }, [open, anchorRect, allItems, loading, total, offset]);
 
   useEffect(() => {
     if (!open) {
@@ -186,6 +199,7 @@ export function MatrixCellLinksPopover({
     return null;
   }
 
+  const items = allItems.slice(offset, offset + PAGE_SIZE);
   const totalPages = total === 0 ? 0 : Math.max(1, Math.ceil(total / PAGE_SIZE));
   const currentPage = totalPages === 0 ? 0 : Math.floor(offset / PAGE_SIZE) + 1;
   const rangeStart = total === 0 ? 0 : offset + 1;
@@ -288,7 +302,7 @@ export function MatrixCellLinksPopover({
               type="button"
               className="rounded border border-zinc-300 px-2 py-0.5 hover:bg-zinc-50 disabled:opacity-50"
               disabled={loading || currentPage <= 1}
-              onClick={() => void loadPage(Math.max(0, offset - PAGE_SIZE))}
+              onClick={() => setOffset(Math.max(0, offset - PAGE_SIZE))}
             >
               上一页
             </button>
@@ -296,7 +310,7 @@ export function MatrixCellLinksPopover({
               type="button"
               className="rounded border border-zinc-300 px-2 py-0.5 hover:bg-zinc-50 disabled:opacity-50"
               disabled={loading || currentPage >= totalPages}
-              onClick={() => void loadPage(offset + PAGE_SIZE)}
+              onClick={() => setOffset(offset + PAGE_SIZE)}
             >
               下一页
             </button>
